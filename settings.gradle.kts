@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "PhotoMap"
 include(":app")
- 
+include(":data")
