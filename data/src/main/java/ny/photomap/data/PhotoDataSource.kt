@@ -9,7 +9,8 @@ import android.provider.MediaStore
 class PhotoDataSource(private val contentResolver: ContentResolver) {
 
     private val projection = arrayOf(
-        MediaStore.Images.Media._ID
+        MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.DATE_TAKEN
     )
 
     fun getAllPhotoUriList(): List<Uri> = getPhotoUriList(null, null)
