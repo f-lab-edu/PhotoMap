@@ -17,10 +17,14 @@ const val IMAGE_3_ID = 3L
 const val IMAGE_4_ID = 4L
 const val IMAGE_5_ID = 5L
 
-const val TIME_2023_01_01_12_00_00 = 1672542000000 // 2023.1.1 12:00:00
-const val TIME_2024_01_01_12_00_00 = 1704078000000L // 2024.1.1 12:00:00
-const val TIME_2024_01_01_12_01_00 = 1262314860000L // 2024.1.1 12:01:00
-const val TIME_2010_01_01_12_00_00 = 1262314800000L // 2010.1.1 12:00:00
+const val TIME_2023_01_01_12_00_00 = 1672542000000 // 2023:01:01 12:00:00
+const val TIME_2024_01_01_12_00_00 = 1704078000000L // 2024:01:01 12:00:00
+const val TIME_2024_01_01_12_01_00 = 1262314860000L // 2024:01:01 12:01:00
+const val TIME_2010_01_01_12_00_00 = 1262314800000L // 2010:01:01 12:00:00
+
+val LOCATION_1 = 37.579617 to 126.977041 // 경복궁
+val LOCATION_2 = 37.2871202 to 127.0119379 // 수원 화성
+val LOCATION_3 = 35.8011781 to 128.098098 // 해인사
 
 val IMAGE_1 = arrayOf(
     IMAGE_1_ID,
@@ -51,12 +55,40 @@ val IMAGE_5 = arrayOf(
     "PHOTO URI 5",
 )
 
-private fun getMockUri(id: Long): Uri =
+fun getMockUri(id: Long): Uri =
     ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
 val PHOTOINFO_1 = PhotoInfo(
     uri = getMockUri(IMAGE_1_ID),
-    latitude = 300.0,
-    longitude = 200.0,
-    generationTime = IMAGE_1[1].toString()
+    latitude = LOCATION_1.first,
+    longitude = LOCATION_1.second,
+    generationTime = "2023:01:01 12:00:00"
+)
+
+val PHOTOINFO_2 = PhotoInfo(
+    uri = getMockUri(IMAGE_2_ID),
+    latitude = LOCATION_1.first,
+    longitude = LOCATION_1.second,
+    generationTime = "2024:01:01 12:00:00"
+)
+
+val PHOTOINFO_3 = PhotoInfo(
+    uri = getMockUri(IMAGE_3_ID),
+    latitude = LOCATION_2.first,
+    longitude = LOCATION_2.second,
+    generationTime = null
+)
+
+val PHOTOINFO_4 = PhotoInfo(
+    uri = getMockUri(IMAGE_4_ID),
+    latitude = LOCATION_1.first,
+    longitude = LOCATION_1.second,
+    generationTime = null
+)
+
+val PHOTOINFO_5 = PhotoInfo(
+    uri = getMockUri(IMAGE_5_ID),
+    latitude = LOCATION_2.first,
+    longitude = LOCATION_2.second,
+    generationTime = "2024:01:01 12:01:00"
 )

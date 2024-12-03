@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.same
 import org.mockito.kotlin.whenever
@@ -42,10 +43,10 @@ class PhotoDataSourceTest {
             contentResolver.query(
                 same(MediaStore.Images.Media.EXTERNAL_CONTENT_URI),
                 anyOrNull(),
+                isNull(),
+                isNull(),
                 anyOrNull(),
-                anyOrNull(),
-                anyOrNull(),
-                anyOrNull(),
+                isNull(),
             )
         ).thenReturn(cursor)
 
@@ -73,7 +74,7 @@ class PhotoDataSourceTest {
                 eq("${MediaStore.Images.Media.DATE_TAKEN} BETWEEN ? AND ?"),
                 eq(arrayOf(TIME_2010_01_01_12_00_00.toString(), TIME_2024_01_01_12_00_00.toString())),
                 anyOrNull(),
-                anyOrNull(),
+                isNull(),
             )
         ).thenReturn(cursor)
 
@@ -94,7 +95,7 @@ class PhotoDataSourceTest {
                 eq("${MediaStore.Images.Media.DATE_TAKEN} BETWEEN ? AND ?"),
                 eq(arrayOf(0.toString(), TIME_2010_01_01_12_00_00.toString())),
                 anyOrNull(),
-                anyOrNull(),
+                isNull(),
             )
         ).thenReturn(cursor)
 

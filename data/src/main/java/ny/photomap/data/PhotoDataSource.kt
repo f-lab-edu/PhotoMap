@@ -13,6 +13,9 @@ class PhotoDataSource(private val contentResolver: ContentResolver) {
         MediaStore.Images.Media.DATE_TAKEN
     )
 
+    private val order =
+        "${MediaStore.Images.Media.DATE_TAKEN}, ${MediaStore.Images.Media.DATE_ADDED}, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+
     fun getAllPhotoUriList(): List<Uri> = getPhotoUriList(null, null)
     fun getDateRangePhotoUriList(startMilliSecond: Long, endMilliSecond: Long): List<Uri> =
         getPhotoUriList(
@@ -28,7 +31,7 @@ class PhotoDataSource(private val contentResolver: ContentResolver) {
                 projection,
                 selection,
                 selectionArgs,
-                null,
+                order,
                 null
             )
 
