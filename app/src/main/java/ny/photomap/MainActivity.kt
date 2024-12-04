@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import ny.photomap.ui.theme.PhotoMapTheme
 
 class MainActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -22,4 +24,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
 }

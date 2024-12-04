@@ -14,6 +14,7 @@ activityCompose = "1.9.3"
 composeBom = "2024.11.00"
 secretsGradlePlugin = "2.0.1"
 mapsCompose = "4.4.1"
+accompanish = "0.36.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,7 @@ secrets-gradle-plugin = { group = "com.google.android.libraries.mapsplatform.sec
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-utils", version.ref = "mapsCompose" }
 maps-compose-widgets = { group = "com.google.maps.android", name = "maps-compose-widgets", version.ref = "mapsCompose" }
+accompanist-permissions = { group = "com.google.accompanist", name="accompanist-permissions", version.ref="accompanish" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
