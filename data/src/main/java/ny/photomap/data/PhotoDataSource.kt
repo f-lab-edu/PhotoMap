@@ -1,54 +1,48 @@
 package ny.photomap.data
 
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.database.Cursor
-import android.net.Uri
-import android.provider.MediaStore
+import ny.photomap.model.PhotoLocationData
 
-class PhotoDataSource(private val contentResolver: ContentResolver) {
+interface PhotoDataSource {
 
-    private val projection = arrayOf(
-        MediaStore.Images.Media._ID,
-        MediaStore.Images.Media.DATE_TAKEN
-    )
+    suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationData>>
 
-    private val order =
-        "${MediaStore.Images.Media.DATE_TAKEN}, ${MediaStore.Images.Media.DATE_ADDED}, ${MediaStore.Images.Media.DATE_MODIFIED} DESC"
+    suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationData>>
 
-    fun getAllPhotoUriList(): List<Uri> = getPhotoUriList(null, null)
-    fun getDateRangePhotoUriList(startMilliSecond: Long, endMilliSecond: Long): List<Uri> =
-        getPhotoUriList(
-            "${MediaStore.Images.Media.DATE_TAKEN} BETWEEN ? AND ?",
-            arrayOf(startMilliSecond.toString(), endMilliSecond.toString())
-        )
+    suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit>
 
-    private fun getPhotoUriList(selection: String?, selectionArgs: Array<String>?): List<Uri> {
-        val photoUriList = mutableListOf<Uri>()
-        try {
-            val query: Cursor? = contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                selectionArgs,
-                order,
-                null
-            )
+    suspend fun getLatestFetchTime(): Result<Long>
 
-            query?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+    suspend fun getPhotoLocation(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+    ): Result<List<PhotoLocationData>>
 
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val uri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                    photoUriList.add(uri)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return photoUriList
-    }
+    suspend fun getPhotoLocationWithOffset(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        offset: Int,
+        limit: Int,
+    ): Result<List<PhotoLocationData>>
+
+    suspend fun getPhotoLocation(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        startTime: Long,
+        endTime: Long,
+    ): Result<List<PhotoLocationData>>
+
+    suspend fun getPhotoLocationWithOffset(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        startTime: Long,
+        endTime: Long,
+        offset: Int,
+        limit: Int,
+    ): Result<List<PhotoLocationData>>
+
 
 }
