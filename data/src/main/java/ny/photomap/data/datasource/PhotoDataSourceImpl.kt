@@ -71,8 +71,10 @@ class PhotoDataSourceImpl @Inject constructor(private val contentResolver: Conte
                                 latitude = latitude,
                                 longitude = longitude,
                                 generationTime = it.getAttribute(TAG_DATETIME_ORIGINAL),
-                                addTime = it.getAttribute(TAG_DATETIME)
+                                addTime = it.getAttribute(TAG_DATETIME),
+                                thumbNail = it.thumbnail
                             )
+
                         }
                     }?.let { data ->
                         list.add(data)

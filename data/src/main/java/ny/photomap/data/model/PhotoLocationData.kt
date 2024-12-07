@@ -9,4 +9,5 @@ data class PhotoLocationData(
     val longitude: Double,
     val generationTime: String?,
     val addTime: String?,
+    val thumbNail : ByteArray?
 )

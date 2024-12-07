@@ -7,4 +7,5 @@ data class PhotoLocationModel(
     val longitude: Double,
     val generationTimeMillis: Long?,
     val additionTimeMillis: Long?,
+    val thumbNail : ByteArray?
 )
