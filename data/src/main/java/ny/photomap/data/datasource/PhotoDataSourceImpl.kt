@@ -10,11 +10,15 @@ import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL
+import ny.photomap.data.db.PhotoLocationDao
+import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 import javax.inject.Inject
 
-class PhotoDataSourceImpl @Inject constructor(private val contentResolver: ContentResolver) :
-    PhotoDataSource {
+class PhotoDataSourceImpl @Inject constructor(
+    private val contentResolver: ContentResolver,
+    private val photoLocationDao: PhotoLocationDao,
+) : PhotoDataSource {
 
     private val projection = arrayOf(
         MediaStore.Images.Media._ID,
@@ -107,9 +111,14 @@ class PhotoDataSourceImpl @Inject constructor(private val contentResolver: Conte
         latitude: Double,
         longitude: Double,
         range: Double,
-    ): Result<List<PhotoLocationData>> {
-        TODO("Not yet implemented")
+    ): Result<List<PhotoLocationEntity>> = runCatching {
+        photoLocationDao.getLocationOf(
+            latitude = latitude,
+            longitude = longitude,
+            range = range
+        )
     }
+
 
     override suspend fun getPhotoLocation(
         latitude: Double,
@@ -117,9 +126,16 @@ class PhotoDataSourceImpl @Inject constructor(private val contentResolver: Conte
         range: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationData>> {
-        TODO("Not yet implemented")
+    ): Result<List<PhotoLocationEntity>> = runCatching {
+        photoLocationDao.getLocationAndDateOf(
+            latitude = latitude,
+            longitude = longitude,
+            range = range,
+            fromTime = startTime,
+            toTime = endTime
+        )
     }
+
 
     override suspend fun getPhotoLocationWithOffset(
         latitude: Double,
@@ -127,7 +143,7 @@ class PhotoDataSourceImpl @Inject constructor(private val contentResolver: Conte
         range: Double,
         offset: Int,
         limit: Int,
-    ): Result<List<PhotoLocationData>> {
+    ): Result<List<PhotoLocationEntity>> {
         TODO("Not yet implemented")
     }
 
@@ -139,7 +155,7 @@ class PhotoDataSourceImpl @Inject constructor(private val contentResolver: Conte
         endTime: Long,
         offset: Int,
         limit: Int,
-    ): Result<List<PhotoLocationData>> {
+    ): Result<List<PhotoLocationEntity>> {
         TODO("Not yet implemented")
     }
 

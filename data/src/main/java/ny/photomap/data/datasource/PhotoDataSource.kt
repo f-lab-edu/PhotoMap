@@ -1,5 +1,6 @@
 package ny.photomap.data.datasource
 
+import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 
 interface PhotoDataSource {
@@ -16,7 +17,7 @@ interface PhotoDataSource {
         latitude: Double,
         longitude: Double,
         range: Double,
-    ): Result<List<PhotoLocationData>>
+    ): Result<List<PhotoLocationEntity>>
 
     suspend fun getPhotoLocationWithOffset(
         latitude: Double,
@@ -24,7 +25,7 @@ interface PhotoDataSource {
         range: Double,
         offset: Int,
         limit: Int,
-    ): Result<List<PhotoLocationData>>
+    ): Result<List<PhotoLocationEntity>>
 
     suspend fun getPhotoLocation(
         latitude: Double,
@@ -32,7 +33,7 @@ interface PhotoDataSource {
         range: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationData>>
+    ): Result<List<PhotoLocationEntity>>
 
     suspend fun getPhotoLocationWithOffset(
         latitude: Double,
@@ -42,7 +43,7 @@ interface PhotoDataSource {
         endTime: Long,
         offset: Int,
         limit: Int,
-    ): Result<List<PhotoLocationData>>
+    ): Result<List<PhotoLocationEntity>>
 
 
 }

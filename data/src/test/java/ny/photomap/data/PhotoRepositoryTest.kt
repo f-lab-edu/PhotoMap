@@ -16,16 +16,16 @@ class PhotoRepositoryTest {
     private lateinit var dataSource: PhotoDataSourceImpl
     private lateinit var repository: PhotoRepositoryImpl
 
-    @Before
-    fun setUp() {
-        contentResolver = mock()
-        dataSource = Mockito.spy<PhotoDataSourceImpl>(PhotoDataSourceImpl(contentResolver))
-        repository = Mockito.spy<PhotoRepositoryImpl>(
-            PhotoRepositoryImpl(
-                dataSource = dataSource
-            )
-        )
-    }
+//    @Before
+//    fun setUp() {
+//        contentResolver = mock()
+//        dataSource = Mockito.spy<PhotoDataSourceImpl>(PhotoDataSourceImpl(contentResolver))
+//        repository = Mockito.spy<PhotoRepositoryImpl>(
+//            PhotoRepositoryImpl(
+//                dataSource = dataSource
+//            )
+//        )
+//    }
 
     // todo : PhotoRepositoryImpl 완성 후 작업
     /*@Test

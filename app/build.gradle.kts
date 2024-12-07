@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.secrets.gradle.plugin)
+    alias(libs.plugins.compose.compiler)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
