@@ -1,9 +1,12 @@
-package ny.photomap.data
+package ny.photomap.data.repository
 
+import ny.photomap.data.datasource.PhotoDataSource
 import ny.photomap.domain.PhotoRepository
 import ny.photomap.domain.model.PhotoLocationModel
+import javax.inject.Inject
 
-class PhotoRepositoryImpl(val dataSource: PhotoDataSource) : PhotoRepository {
+class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataSource) :
+    PhotoRepository {
     override suspend fun fetchAllPhotoLocation(): Result<Boolean> {
         TODO("Not yet implemented")
     }

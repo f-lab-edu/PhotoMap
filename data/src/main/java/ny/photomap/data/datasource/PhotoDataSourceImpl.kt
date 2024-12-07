@@ -1,4 +1,4 @@
-package ny.photomap.data
+package ny.photomap.data.datasource
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -10,9 +10,11 @@ import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL
-import ny.photomap.model.PhotoLocationData
+import ny.photomap.data.model.PhotoLocationData
+import javax.inject.Inject
 
-class PhotoDataSourceImpl(private val contentResolver: ContentResolver) : PhotoDataSource {
+class PhotoDataSourceImpl @Inject constructor(private val contentResolver: ContentResolver) :
+    PhotoDataSource {
 
     private val projection = arrayOf(
         MediaStore.Images.Media._ID,

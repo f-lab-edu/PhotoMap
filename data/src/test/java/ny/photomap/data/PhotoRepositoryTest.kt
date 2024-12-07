@@ -1,18 +1,12 @@
 package ny.photomap.data
 
 import android.content.ContentResolver
-import android.database.MatrixCursor
-import android.provider.MediaStore
+import ny.photomap.data.datasource.PhotoDataSourceImpl
+import ny.photomap.data.repository.PhotoRepositoryImpl
 import org.junit.Before
-import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.same
-import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)

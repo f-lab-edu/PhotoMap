@@ -3,7 +3,6 @@ package ny.photomap.data
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
-import ny.photomap.model.PhotoLocationData
 
 val IMAGE_COLUMNS = arrayOf(
     MediaStore.Images.Media._ID,

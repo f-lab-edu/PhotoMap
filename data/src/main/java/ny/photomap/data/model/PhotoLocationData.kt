@@ -1,4 +1,4 @@
-package ny.photomap.model
+package ny.photomap.data.model
 
 import android.net.Uri
 

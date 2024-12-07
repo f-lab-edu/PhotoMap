@@ -1,6 +1,6 @@
-package ny.photomap.data
+package ny.photomap.data.datasource
 
-import ny.photomap.model.PhotoLocationData
+import ny.photomap.data.model.PhotoLocationData
 
 interface PhotoDataSource {
 
