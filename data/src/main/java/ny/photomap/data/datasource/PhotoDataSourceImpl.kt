@@ -61,7 +61,7 @@ class PhotoDataSourceImpl @Inject constructor(
 
 
     // todo : 멘토님께 질문 - 에러 발생 시 list에 담겨져 있는 유효한 정보도 전달하지 못하게 됨. 이런 처리의 아쉬움.
-    fun queryToList(query: Cursor?): Result<List<PhotoLocationData>> {
+    fun queryToList(query: Cursor?): List<PhotoLocationData> {
         val list = mutableListOf<PhotoLocationData>()
         return try {
             query?.use { cursor ->
@@ -105,9 +105,9 @@ class PhotoDataSourceImpl @Inject constructor(
                     }
                 }
             }
-            Result.success(list)
+            list
         } catch (e: Exception) {
-            Result.failure<List<PhotoLocationData>>(e)
+            throw e
         }
     }
 
@@ -120,49 +120,42 @@ class PhotoDataSourceImpl @Inject constructor(
         } else null
     }
 
-    override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationData>> {
+    override suspend fun fetchAllPhotoLocation(): List<PhotoLocationData> {
         return queryToList(getQuery())
     }
 
-    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationData>> {
+    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData> {
         return queryToList(getQueryAfter(fetchTime))
     }
 
-    override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> {
-        return runCatching {
-            preferences.updateTimeSyncDatabase(fetchTime)
-        }
+    override suspend fun saveLatestFetchTime(fetchTime: Long) {
+        return preferences.updateTimeSyncDatabase(fetchTime)
     }
 
-    override suspend fun getLatestFetchTime(): Result<Long> {
-        return runCatching {
-            preferences.timeSyncDatabaseFlow.first()
-        }
+    override suspend fun getLatestFetchTime(): Long {
+        return preferences.timeSyncDatabaseFlow.first()
     }
 
-    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>): Result<Unit> {
-        return runCatching {
-            photoLocationDao.insertAll(list)
-        }
+    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>) {
+        return photoLocationDao.insertAll(list)
+
     }
 
-    override suspend fun deleteAllPhotoLocation(): Result<Unit> {
-        return runCatching {
-            photoLocationDao.deleteAll()
-        }
+    override suspend fun deleteAllPhotoLocation() {
+        return photoLocationDao.deleteAll()
+
     }
 
     override suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
-    ): Result<List<PhotoLocationEntity>> = runCatching {
+    ): List<PhotoLocationEntity> =
         photoLocationDao.getLocationOf(
             latitude = latitude,
             longitude = longitude,
             range = range
         )
-    }
 
 
     override suspend fun getPhotoLocation(
@@ -171,7 +164,7 @@ class PhotoDataSourceImpl @Inject constructor(
         range: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationEntity>> = runCatching {
+    ): List<PhotoLocationEntity> =
         photoLocationDao.getLocationAndDateOf(
             latitude = latitude,
             longitude = longitude,
@@ -179,7 +172,7 @@ class PhotoDataSourceImpl @Inject constructor(
             fromTime = startTime,
             toTime = endTime
         )
-    }
+
 
     fun getExifInterface(uri: Uri): ExifInterface? =
         contentResolver.openInputStream(uri)?.use { inputStream ->
@@ -194,7 +187,7 @@ class PhotoDataSourceImpl @Inject constructor(
          range: Double,
          offset: Int,
          limit: Int,
-     ): Result<List<PhotoLocationEntity>> {
+     ): List<PhotoLocationEntity> {
          TODO("Not yet implemented")
      }
 
@@ -206,7 +199,7 @@ class PhotoDataSourceImpl @Inject constructor(
          endTime: Long,
          offset: Int,
          limit: Int,
-     ): Result<List<PhotoLocationEntity>> {
+     ): List<PhotoLocationEntity> {
          TODO("Not yet implemented")
      }*/
 

@@ -5,23 +5,23 @@ import ny.photomap.data.model.PhotoLocationData
 
 interface PhotoDataSource {
 
-    suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationData>>
+    suspend fun fetchAllPhotoLocation(): List<PhotoLocationData>
 
-    suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationData>>
+    suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData>
 
-    suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit>
+    suspend fun saveLatestFetchTime(fetchTime: Long)
 
-    suspend fun getLatestFetchTime(): Result<Long>
+    suspend fun getLatestFetchTime(): Long
 
-    suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>) : Result<Unit>
+    suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>)
 
-    suspend fun deleteAllPhotoLocation() : Result<Unit>
+    suspend fun deleteAllPhotoLocation()
 
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
-    ): Result<List<PhotoLocationEntity>>
+    ): List<PhotoLocationEntity>
 
     suspend fun getPhotoLocation(
         latitude: Double,
@@ -29,26 +29,26 @@ interface PhotoDataSource {
         range: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationEntity>>
+    ): List<PhotoLocationEntity>
 
     // todo 추후 기능 추가
-/*    suspend fun getPhotoLocationWithOffset(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        offset: Int,
-        limit: Int,
-    ): Result<List<PhotoLocationEntity>>
+    /*    suspend fun getPhotoLocationWithOffset(
+            latitude: Double,
+            longitude: Double,
+            range: Double,
+            offset: Int,
+            limit: Int,
+        ):List<PhotoLocationEntity>
 
-    suspend fun getPhotoLocationWithOffset(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        startTime: Long,
-        endTime: Long,
-        offset: Int,
-        limit: Int,
-    ): Result<List<PhotoLocationEntity>>*/
+        suspend fun getPhotoLocationWithOffset(
+            latitude: Double,
+            longitude: Double,
+            range: Double,
+            startTime: Long,
+            endTime: Long,
+            offset: Int,
+            limit: Int,
+        ): List<PhotoLocationEntity>*/
 
 
 }

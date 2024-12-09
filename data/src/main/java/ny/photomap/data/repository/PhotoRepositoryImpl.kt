@@ -5,53 +5,58 @@ import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.db.toEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.domain.PhotoRepository
+import ny.photomap.domain.Result
 import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.domain.runResultCatching
 import javax.inject.Inject
 
 class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataSource) :
     PhotoRepository {
     override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationModel>> {
-        return runCatching {
-            dataSource.fetchAllPhotoLocation()
-                .getOrThrow().map(PhotoLocationData::toModel)
+        return runResultCatching {
+            dataSource.fetchAllPhotoLocation().map(PhotoLocationData::toModel)
         }
     }
 
     override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationModel>> {
-        return runCatching {
+        return runResultCatching {
             dataSource.fetchPhotoLocationAddedAfter(fetchTime = fetchTime)
-                .getOrThrow().map(PhotoLocationData::toModel)
+                .map(PhotoLocationData::toModel)
         }
     }
 
-    override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> =
+    override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> = runResultCatching {
         dataSource.saveLatestFetchTime(fetchTime)
 
+    }
 
-    override suspend fun getLatestFetchTime(): Result<Long> =
+
+    override suspend fun getLatestFetchTime(): Result<Long> = runResultCatching {
         dataSource.getLatestFetchTime()
+    }
 
     override suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
-        return runCatching {
+        return runResultCatching {
             dataSource.saveAllPhotoLocation(
                 list.map(PhotoLocationModel::toEntity)
             )
         }
     }
 
-    override suspend fun deleteAllPhotoLocation(): Result<Unit> =
+    override suspend fun deleteAllPhotoLocation(): Result<Unit> = runResultCatching {
         dataSource.deleteAllPhotoLocation()
+    }
 
     override suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
     ): Result<List<PhotoLocationModel>> {
-        return runCatching {
+        return runResultCatching {
             dataSource.getPhotoLocation(
                 latitude = latitude, longitude = longitude,
                 range = range
-            ).getOrThrow().map(PhotoLocationEntity::toModel)
+            ).map(PhotoLocationEntity::toModel)
         }
     }
 
@@ -62,11 +67,11 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         startTime: Long,
         endTime: Long,
     ): Result<List<PhotoLocationModel>> {
-        return runCatching {
+        return runResultCatching {
             dataSource.getPhotoLocation(
                 latitude = latitude, longitude = longitude,
                 range = range, startTime = startTime, endTime = endTime
-            ).getOrThrow().map(PhotoLocationEntity::toModel)
+            ).map(PhotoLocationEntity::toModel)
         }
     }
 
