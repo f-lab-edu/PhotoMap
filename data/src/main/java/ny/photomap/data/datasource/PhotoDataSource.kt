@@ -19,14 +19,6 @@ interface PhotoDataSource {
         range: Double,
     ): Result<List<PhotoLocationEntity>>
 
-    suspend fun getPhotoLocationWithOffset(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        offset: Int,
-        limit: Int,
-    ): Result<List<PhotoLocationEntity>>
-
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
@@ -35,6 +27,15 @@ interface PhotoDataSource {
         endTime: Long,
     ): Result<List<PhotoLocationEntity>>
 
+    // todo 추후 기능 추가
+/*    suspend fun getPhotoLocationWithOffset(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        offset: Int,
+        limit: Int,
+    ): Result<List<PhotoLocationEntity>>
+
     suspend fun getPhotoLocationWithOffset(
         latitude: Double,
         longitude: Double,
@@ -43,7 +44,7 @@ interface PhotoDataSource {
         endTime: Long,
         offset: Int,
         limit: Int,
-    ): Result<List<PhotoLocationEntity>>
+    ): Result<List<PhotoLocationEntity>>*/
 
 
 }

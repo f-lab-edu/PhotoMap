@@ -56,6 +56,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.room.ktx)
     testImplementation(libs.room.testing)
+    implementation(libs.datastore.preferences)
     testImplementation(libs.junit)
     testImplementation(libs.mockito.kotlin)
     testImplementation(libs.robolectric)

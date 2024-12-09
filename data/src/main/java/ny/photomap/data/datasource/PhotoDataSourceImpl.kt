@@ -8,21 +8,29 @@ import android.provider.MediaStore
 import androidx.core.database.getStringOrNull
 import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
-import androidx.exifinterface.media.ExifInterface.TAG_DATETIME
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL
+import androidx.exifinterface.media.ExifInterface.TAG_OFFSET_TIME_ORIGINAL
+import kotlinx.coroutines.flow.first
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
+import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class PhotoDataSourceImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val photoLocationDao: PhotoLocationDao,
+    private val preferences: PhotoLocationPreferencesImpl,
 ) : PhotoDataSource {
 
     private val projection = arrayOf(
         MediaStore.Images.Media._ID,
-        MediaStore.Images.Media.DISPLAY_NAME
+        MediaStore.Images.Media.DISPLAY_NAME,
+        MediaStore.Images.Media.DATE_ADDED,
+        MediaStore.Images.Media.DATE_TAKEN
     )
 
     private val selectionFromDate = "${MediaStore.Images.Media.DATE_ADDED} >= ?"
@@ -59,6 +67,10 @@ class PhotoDataSourceImpl @Inject constructor(
             query?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
                 val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                val addedTimeColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+                val takenTimeColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
@@ -66,20 +78,28 @@ class PhotoDataSourceImpl @Inject constructor(
                         ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
                     val name = cursor.getStringOrNull(nameColumn)
+                    val addedTime: Long? = cursor.getLong(addedTimeColumn)
+                    var takenTime: Long? = cursor.getLong(takenTimeColumn)
 
                     getExifInterface(uri)?.let {
-                        it.latLong?.let { (latitude, longitude) ->
+                        val generatedTime =
+                            getTimestampWithOffset(
+                                it.getAttribute(TAG_DATETIME_ORIGINAL),
+                                it.getAttribute(TAG_OFFSET_TIME_ORIGINAL)
+                            ) ?: takenTime
+                        if (generatedTime != null && addedTime != null && it.latLong != null) {
+                            val latitude = it.latLong!![0]
+                            val longitude = it.latLong!![1]
                             PhotoLocationData(
                                 uri = uri,
                                 name = name,
                                 latitude = latitude,
                                 longitude = longitude,
-                                generationTime = it.getAttribute(TAG_DATETIME_ORIGINAL),
-                                addTime = it.getAttribute(TAG_DATETIME),
+                                generatedTime = generatedTime,
+                                addedTime = addedTime,
                                 thumbNail = it.thumbnail
                             )
-
-                        }
+                        } else null
                     }?.let { data ->
                         list.add(data)
                     }
@@ -91,6 +111,15 @@ class PhotoDataSourceImpl @Inject constructor(
         }
     }
 
+    fun getTimestampWithOffset(timeString: String?, offsetTimeString: String?): Long? {
+        return if (timeString != null && offsetTimeString != null) {
+            val formatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")
+            val photoTakenTime = LocalDateTime.parse(timeString, formatter)
+            val zoneOffset = ZoneOffset.of(offsetTimeString)
+            photoTakenTime.toInstant(zoneOffset).toEpochMilli()
+        } else null
+    }
+
     override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationData>> {
         return queryToList(getQuery())
     }
@@ -100,11 +129,15 @@ class PhotoDataSourceImpl @Inject constructor(
     }
 
     override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> {
-        TODO("Not yet implemented")
+        return runCatching {
+            preferences.updateTimeSyncDatabase(fetchTime)
+        }
     }
 
     override suspend fun getLatestFetchTime(): Result<Long> {
-        TODO("Not yet implemented")
+        return runCatching {
+            preferences.timeSyncDatabaseFlow.first()
+        }
     }
 
     override suspend fun getPhotoLocation(
@@ -136,31 +169,33 @@ class PhotoDataSourceImpl @Inject constructor(
         )
     }
 
-
-    override suspend fun getPhotoLocationWithOffset(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        offset: Int,
-        limit: Int,
-    ): Result<List<PhotoLocationEntity>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun getPhotoLocationWithOffset(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        startTime: Long,
-        endTime: Long,
-        offset: Int,
-        limit: Int,
-    ): Result<List<PhotoLocationEntity>> {
-        TODO("Not yet implemented")
-    }
-
     fun getExifInterface(uri: Uri): ExifInterface? =
         contentResolver.openInputStream(uri)?.use { inputStream ->
             ExifInterface(inputStream)
         }
+
+
+    // todo 추후 기능 추가
+    /* override suspend fun getPhotoLocationWithOffset(
+         latitude: Double,
+         longitude: Double,
+         range: Double,
+         offset: Int,
+         limit: Int,
+     ): Result<List<PhotoLocationEntity>> {
+         TODO("Not yet implemented")
+     }
+
+     override suspend fun getPhotoLocationWithOffset(
+         latitude: Double,
+         longitude: Double,
+         range: Double,
+         startTime: Long,
+         endTime: Long,
+         offset: Int,
+         limit: Int,
+     ): Result<List<PhotoLocationEntity>> {
+         TODO("Not yet implemented")
+     }*/
+
 }

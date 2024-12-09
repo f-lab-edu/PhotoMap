@@ -5,7 +5,7 @@ data class PhotoLocationModel(
     val name: String?,
     val latitude: Double,
     val longitude: Double,
-    val generationTimeMillis: Long?,
-    val additionTimeMillis: Long?,
+    val generatedTimeMillis: Long,
+    val addedTimeMillis: Long,
     val thumbNail : ByteArray?
 )
