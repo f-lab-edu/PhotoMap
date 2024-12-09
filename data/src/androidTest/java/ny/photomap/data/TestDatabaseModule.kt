@@ -1,22 +1,21 @@
-package ny.photomap.data.di
+package ny.photomap.data
 
 import android.content.Context
 import dagger.Module
 import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import ny.photomap.data.db.PhotoLocationDao
+import dagger.hilt.testing.TestInstallIn
 import ny.photomap.data.db.PhotoLocationDatabase
+import ny.photomap.data.di.DatabaseModule
 
-@InstallIn(SingletonComponent::class)
 @Module
-class DatabaseModule {
+@TestInstallIn(
+    components = [SingletonComponent::class],
+    replaces = [DatabaseModule::class]
+)
+class TestDatabaseModule {
     @Provides
     fun providePhotoLocationDatabase(@ApplicationContext context: Context): PhotoLocationDatabase =
         PhotoLocationDatabase.getInstance(context)
-
-    @Provides
-    fun providePhotoLocationDao(photoLocationDatabase: PhotoLocationDatabase): PhotoLocationDao =
-        photoLocationDatabase.photoLocationDao()
 }

@@ -1,10 +1,8 @@
 package ny.photomap.data.db
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 
 @Dao
 interface PhotoLocationDao {
@@ -53,12 +51,6 @@ interface PhotoLocationDao {
 
     @Insert
     suspend fun insertAll(entityList: List<PhotoLocationEntity>)
-
-    @Update
-    suspend fun update(entity: PhotoLocationEntity)
-
-    @Delete
-    suspend fun delete(entity: PhotoLocationEntity)
 
     @Query("DELETE FROM photo_location_table")
     suspend fun deleteAll()
