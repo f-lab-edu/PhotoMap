@@ -2,6 +2,7 @@ package ny.photomap.data.repository
 
 import ny.photomap.data.datasource.PhotoDataSource
 import ny.photomap.data.db.PhotoLocationEntity
+import ny.photomap.data.db.toEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.domain.PhotoRepository
 import ny.photomap.domain.model.PhotoLocationModel
@@ -30,6 +31,16 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
     override suspend fun getLatestFetchTime(): Result<Long> =
         dataSource.getLatestFetchTime()
 
+    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
+        return runCatching {
+            dataSource.saveAllPhotoLocation(
+                list.map(PhotoLocationModel::toEntity)
+            )
+        }
+    }
+
+    override suspend fun deleteAllPhotoLocation(): Result<Unit> =
+        dataSource.deleteAllPhotoLocation()
 
     override suspend fun getPhotoLocation(
         latitude: Double,

@@ -140,6 +140,18 @@ class PhotoDataSourceImpl @Inject constructor(
         }
     }
 
+    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>): Result<Unit> {
+        return runCatching {
+            photoLocationDao.insertAll(list)
+        }
+    }
+
+    override suspend fun deleteAllPhotoLocation(): Result<Unit> {
+        return runCatching {
+            photoLocationDao.deleteAll()
+        }
+    }
+
     override suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,

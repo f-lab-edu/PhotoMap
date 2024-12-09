@@ -13,7 +13,7 @@ data class PhotoLocationData(
     val thumbNail: ByteArray?,
 ) : ModelMapper<PhotoLocationModel> {
     override fun toModel(): PhotoLocationModel = PhotoLocationModel(
-        uriString = uri.toString(),
+        uri = this@PhotoLocationData.uri.toString(),
         name = name,
         latitude = latitude,
         longitude = longitude,

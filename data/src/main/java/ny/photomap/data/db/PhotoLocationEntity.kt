@@ -15,13 +15,13 @@ data class PhotoLocationEntity(
     val generatedTime: Long,
     val addedTime: Long,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
-    val thumbNail: ByteArray?
+    val thumbNail: ByteArray?,
 ) : ModelMapper<PhotoLocationModel> {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0
 
     override fun toModel(): PhotoLocationModel = PhotoLocationModel(
-        uriString = uri.toString(),
+        uri = uri,
         name = name,
         latitude = latitude,
         longitude = longitude,
@@ -30,3 +30,13 @@ data class PhotoLocationEntity(
         thumbNail = thumbNail
     )
 }
+
+fun PhotoLocationModel.toEntity(): PhotoLocationEntity = PhotoLocationEntity(
+    uri = uri,
+    name = name,
+    latitude = latitude,
+    longitude = longitude,
+    generatedTime = generatedTimeMillis,
+    addedTime = addedTimeMillis,
+    thumbNail = thumbNail
+)

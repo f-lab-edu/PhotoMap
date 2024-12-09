@@ -12,6 +12,10 @@ interface PhotoRepository {
 
     suspend fun getLatestFetchTime(): Result<Long>
 
+    suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
+
+    suspend fun deleteAllPhotoLocation() : Result<Unit>
+
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,

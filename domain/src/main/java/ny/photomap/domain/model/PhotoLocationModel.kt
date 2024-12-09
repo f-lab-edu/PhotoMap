@@ -1,7 +1,7 @@
 package ny.photomap.domain.model
 
 data class PhotoLocationModel(
-    val uriString: String,
+    val uri: String,
     val name: String?,
     val latitude: Double,
     val longitude: Double,

@@ -60,7 +60,7 @@ interface PhotoLocationDao {
     @Delete
     suspend fun delete(entity: PhotoLocationEntity)
 
-    @Delete
-    suspend fun deleteAll(entityList: List<PhotoLocationEntity>)
+    @Query("DELETE FROM photo_location_table")
+    suspend fun deleteAll()
 
 }

@@ -13,6 +13,10 @@ interface PhotoDataSource {
 
     suspend fun getLatestFetchTime(): Result<Long>
 
+    suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>) : Result<Unit>
+
+    suspend fun deleteAllPhotoLocation() : Result<Unit>
+
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
