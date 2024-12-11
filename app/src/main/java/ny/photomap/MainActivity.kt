@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import dagger.hilt.android.AndroidEntryPoint
 import ny.photomap.ui.theme.PhotoMapTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
 

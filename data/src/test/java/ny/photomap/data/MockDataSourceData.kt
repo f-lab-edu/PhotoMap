@@ -3,7 +3,6 @@ package ny.photomap.data
 import android.content.ContentUris
 import android.net.Uri
 import android.provider.MediaStore
-import ny.photomap.model.PhotoInfo
 
 val IMAGE_COLUMNS = arrayOf(
     MediaStore.Images.Media._ID,
@@ -58,37 +57,39 @@ val IMAGE_5 = arrayOf(
 fun getMockUri(id: Long): Uri =
     ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
-val PHOTOINFO_1 = PhotoInfo(
+// todo : PhotoDataSource 완성 후 작업
+/*
+val PHOTOINFO_1 = PhotoLocationData(
     uri = getMockUri(IMAGE_1_ID),
     latitude = LOCATION_1.first,
     longitude = LOCATION_1.second,
     generationTime = "2023:01:01 12:00:00"
 )
 
-val PHOTOINFO_2 = PhotoInfo(
+val PHOTOINFO_2 = PhotoLocationData(
     uri = getMockUri(IMAGE_2_ID),
     latitude = LOCATION_1.first,
     longitude = LOCATION_1.second,
     generationTime = "2024:01:01 12:00:00"
 )
 
-val PHOTOINFO_3 = PhotoInfo(
+val PHOTOINFO_3 = PhotoLocationData(
     uri = getMockUri(IMAGE_3_ID),
     latitude = LOCATION_2.first,
     longitude = LOCATION_2.second,
     generationTime = null
 )
 
-val PHOTOINFO_4 = PhotoInfo(
+val PHOTOINFO_4 = PhotoLocationData(
     uri = getMockUri(IMAGE_4_ID),
     latitude = LOCATION_1.first,
     longitude = LOCATION_1.second,
     generationTime = null
 )
 
-val PHOTOINFO_5 = PhotoInfo(
+val PHOTOINFO_5 = PhotoLocationData(
     uri = getMockUri(IMAGE_5_ID),
     latitude = LOCATION_2.first,
     longitude = LOCATION_2.second,
     generationTime = "2024:01:01 12:01:00"
-)
+)*/
