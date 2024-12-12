@@ -3,5 +3,6 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="permission_read_image_title">이미지 파일 엑세스</string>
     <string name="permission_read_image_description">서비스를 이용하기 위해서 이미지 파일 엑세스 권한이 필요합니다.</string>
-    <string name="permission_read_image_visual_user_selected_description">선택한 일부 사진에만 엑세스 권한을 부여했습니다.</string>
+    <string name="permission_read_image_visual_user_selected_description">선택한 일부 사진에만 엑세스 권한을 부여했습니다. 모든 이미지 파일에 접근할 수 있게 권한을 허용해주세요.</string>
+    <string name="permission_request_button">권한 승인</string>
 </resources>

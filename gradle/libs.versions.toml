@@ -11,7 +11,7 @@ activity = "1.9.3"
 constraintlayout = "2.2.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.9.3"
-composeBom = "2024.11.00"
+composeBom = "2024.12.01"
 secretsGradlePlugin = "2.0.1"
 mapsCompose = "4.4.1"
 accompanish = "0.36.0"
@@ -27,6 +27,9 @@ archCore = "2.2.0"
 kotlinx-coroutines = "1.9.0"
 truth = "1.1"
 javaxInject = "1"
+navigationCompose = "2.8.5"
+hiltNavigationCompose = "1.2.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,7 +41,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name="lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
@@ -68,11 +71,14 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-arch-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "archCore" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
-truth = { group="com.google.truth", name="truth", version.ref="truth" }
-javax-inject = { group="javax.inject", name="javax.inject", version.ref="javaxInject" }
-kotlinx-coroutine-android={ group="org.jetbrains.kotlinx", name="kotlinx-coroutines-android", version.ref="kotlinx-coroutines" }
-kotlinx-coroutine-core={ group="org.jetbrains.kotlinx", name="kotlinx-coroutines-core", version.ref="kotlinx-coroutines" }
-
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+javax-inject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
+kotlinx-coroutine-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutine-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+#androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeKtx" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

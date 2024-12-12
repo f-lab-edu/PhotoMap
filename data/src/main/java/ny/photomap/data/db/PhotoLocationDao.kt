@@ -2,6 +2,7 @@ package ny.photomap.data.db
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Dao
@@ -46,10 +47,10 @@ interface PhotoLocationDao {
         toTime: Long,
     ): Int
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: PhotoLocationEntity)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entityList: List<PhotoLocationEntity>)
 
     @Query("DELETE FROM photo_location_table")

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -14,15 +15,20 @@ import ny.photomap.ui.theme.PhotoMapTheme
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+//    val viewModel: MainViewModel by viewModels<MainViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             PhotoMapTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MapScreen(Modifier.padding(innerPadding))
-                }
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    MainPhotoMapScreen(
+                        modifier = Modifier,
+//                        permissionViewModel = viewModel
+                    )
+//                }
             }
         }
     }
