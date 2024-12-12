@@ -10,7 +10,9 @@ import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL
 import androidx.exifinterface.media.ExifInterface.TAG_OFFSET_TIME_ORIGINAL
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
@@ -60,54 +62,63 @@ class PhotoDataSourceImpl @Inject constructor(
     }
 
 
-    // todo : 멘토님께 질문 - 에러 발생 시 list에 담겨져 있는 유효한 정보도 전달하지 못하게 됨. 이런 처리의 아쉬움.
     fun queryToList(query: Cursor?): List<PhotoLocationData> {
         val list = mutableListOf<PhotoLocationData>()
-        return try {
-            query?.use { cursor ->
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-                val addedTimeColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
-                val takenTimeColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
+        query?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            val addedTimeColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+            val takenTimeColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)
 
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(idColumn)
-                    val uri =
-                        ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val uri =
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
 
-                    val name = cursor.getStringOrNull(nameColumn)
-                    val addedTime: Long? = cursor.getLong(addedTimeColumn)
-                    var takenTime: Long? = cursor.getLong(takenTimeColumn)
+                val name = cursor.getStringOrNull(nameColumn)
+                val addedTime: Long? = cursor.getLong(addedTimeColumn)
+                var takenTime: Long? = cursor.getLong(takenTimeColumn)
 
-                    getExifInterface(uri)?.let {
-                        val generatedTime =
-                            getTimestampWithOffset(
-                                it.getAttribute(TAG_DATETIME_ORIGINAL),
-                                it.getAttribute(TAG_OFFSET_TIME_ORIGINAL)
-                            ) ?: takenTime
-                        if (generatedTime != null && addedTime != null && it.latLong != null) {
-                            val latitude = it.latLong!![0]
-                            val longitude = it.latLong!![1]
-                            PhotoLocationData(
-                                uri = uri,
-                                name = name,
-                                latitude = latitude,
-                                longitude = longitude,
-                                generatedTime = generatedTime,
-                                addedTime = addedTime,
-                                thumbNail = it.thumbnail
-                            )
-                        } else null
-                    }?.let { data ->
-                        list.add(data)
-                    }
+                createPhotoLocationData(
+                    uri = uri,
+                    name = name,
+                    addedTime = addedTime,
+                    takenTime = takenTime
+                )?.let { data ->
+                    list.add(data)
                 }
             }
-            list
-        } catch (e: Exception) {
-            throw e
+        }
+        return list
+    }
+
+    fun createPhotoLocationData(
+        uri: Uri,
+        name: String?,
+        addedTime: Long?,
+        takenTime: Long?,
+    ): PhotoLocationData? {
+        return getExifInterface(uri)?.let {
+            val generatedTime =
+                getTimestampWithOffset(
+                    it.getAttribute(TAG_DATETIME_ORIGINAL),
+                    it.getAttribute(TAG_OFFSET_TIME_ORIGINAL)
+                ) ?: takenTime
+            if (generatedTime != null && addedTime != null && it.latLong != null) {
+                val latitude = it.latLong!![0]
+                val longitude = it.latLong!![1]
+                PhotoLocationData(
+                    uri = uri,
+                    name = name,
+                    latitude = latitude,
+                    longitude = longitude,
+                    generatedTime = generatedTime,
+                    addedTime = addedTime,
+                    thumbNail = it.thumbnail
+                )
+            } else null
         }
     }
 
@@ -120,13 +131,15 @@ class PhotoDataSourceImpl @Inject constructor(
         } else null
     }
 
-    override suspend fun fetchAllPhotoLocation(): List<PhotoLocationData> {
-        return queryToList(getQuery())
-    }
+    override suspend fun fetchAllPhotoLocation(): List<PhotoLocationData> =
+        withContext(Dispatchers.IO) {
+            queryToList(getQuery())
+        }
 
-    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData> {
-        return queryToList(getQueryAfter(fetchTime))
-    }
+    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData> =
+        withContext(Dispatchers.IO) {
+            queryToList(getQueryAfter(fetchTime))
+        }
 
     override suspend fun saveLatestFetchTime(fetchTime: Long) {
         return preferences.updateTimeSyncDatabase(fetchTime)
