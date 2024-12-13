@@ -1,6 +1,6 @@
 package ny.photomap.model
 
-data class TimeModel(
+data class TimeUIModel(
     val takenTime : Long,
     val addedTime: Long,
 )

@@ -91,6 +91,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.navigation.compose)
     implementation(libs.timber)
+    implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)

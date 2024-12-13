@@ -15,8 +15,8 @@ import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
 import ny.photomap.domain.usecase.SyncPhotoUseCase
 import ny.photomap.model.AcceptPermissionState
-import ny.photomap.model.LocationModel
-import ny.photomap.model.PhotoLocationUiModel
+import ny.photomap.model.LocationUIModel
+import ny.photomap.model.PhotoLocationUIModel
 import javax.inject.Inject
 import kotlin.collections.List
 
@@ -29,19 +29,22 @@ sealed interface MainMapIntent {
     object Sync : MainMapIntent
 
     // 현재 위치로 이동
-    object MoveToCurrentLocation: MainMapIntent
+    object SearchAndMoveToCurrentLocation: MainMapIntent
+
+    // 현재 위치로 이동해 지도의 사진들 보기
+    data class LookAroundCurrentLocation(val location: LocationUIModel): MainMapIntent
 
     // 사진 마커 선택
     data class SelectPhotoLocationMarker(
         val photoList: List<String>,
-        val targetPhoto: PhotoLocationUiModel,
+        val targetPhoto: PhotoLocationUIModel,
     ) : MainMapIntent
 
-    // 사진 위치 정보 선택
-    data class SelectLocation(val targetPhoto: PhotoLocationUiModel) : MainMapIntent
+    // 사진 위치 정보 선택f
+    data class SelectLocation(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
 
     // 사진 선택
-    data class SelectPhoto(val targetPhoto: PhotoLocationUiModel) : MainMapIntent
+    data class SelectPhoto(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
 
     // 권한 요청에 응답함
     data class ResponsePermissionRequest(val permissionState: AcceptPermissionState) : MainMapIntent
@@ -51,11 +54,10 @@ sealed interface MainMapIntent {
 }
 
 data class MainMapState(
-    val cameraLocation: LocationModel = LocationModel(100.0, 100.0),
+    val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0),
     val photoList: List<String> = emptyList(),
-    val targetPhoto: PhotoLocationUiModel? = null,
+    val targetPhoto: PhotoLocationUIModel? = null,
     val loading: Boolean = false,
-    val permissionNotice: Boolean = false,
     val permissionState: AcceptPermissionState = AcceptPermissionState(),
 )
 
@@ -63,8 +65,8 @@ sealed interface MainMapEffect {
     object RequestPermissions : MainMapEffect
     object NavigateToAppSetting : MainMapEffect
     object MoveToCurrentLocation : MainMapEffect
-    data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUiModel) : MainMapEffect
-    data class NavigateToPhoto(val targetPhoto: PhotoLocationUiModel) : MainMapEffect
+    data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
+    data class NavigateToPhoto(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
     data class Error(val message: String) : MainMapEffect
 }
 
@@ -137,8 +139,14 @@ class MainMapViewModel @Inject constructor(
                 _effect.emit(MainMapEffect.NavigateToAppSetting)
             }
 
-            MainMapIntent.MoveToCurrentLocation -> state.apply {
+            MainMapIntent.SearchAndMoveToCurrentLocation -> state.apply {
                 _effect.emit(MainMapEffect.MoveToCurrentLocation)
+            }
+
+            is MainMapIntent.LookAroundCurrentLocation -> state.copy(
+                cameraLocation = intent.location
+            ).apply {
+                // todo 데이터 베이스 정보 불러서 state에 넣기
             }
         }
     }

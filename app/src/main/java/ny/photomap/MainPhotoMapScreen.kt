@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -18,11 +19,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.tasks.await
 import ny.photomap.model.AcceptPermissionState
 import ny.photomap.model.FileAcceptPermissionState
 import ny.photomap.model.LocationPermissionState
+import ny.photomap.model.LocationUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
 import timber.log.Timber
@@ -66,6 +74,10 @@ fun MainPhotoMapScreen(
 
         val state by viewModel.state.collectAsStateWithLifecycle()
 
+        val cameraPositionState = rememberCameraPositionState()
+        val fusedLocationClient =
+            remember { LocationServices.getFusedLocationProviderClient(context) }
+
         LaunchedEffect(Unit) {
             viewModel.handleIntent(MainMapIntent.CheckSyncTime)
         }
@@ -85,7 +97,31 @@ fun MainPhotoMapScreen(
                     is MainMapEffect.NavigateToDetailLocationMap -> {}
                     is MainMapEffect.NavigateToPhoto -> {}
                     is MainMapEffect.Error -> {}
-                    MainMapEffect.MoveToCurrentLocation -> {}
+                    MainMapEffect.MoveToCurrentLocation -> {
+                        try {
+                            val location = fusedLocationClient.lastLocation.await()
+                            cameraPositionState.animate(
+                                update =
+                                CameraUpdateFactory.newLatLngZoom(
+                                    LatLng(
+                                        location.latitude,
+                                        location.longitude
+                                    ), 15.0f
+                                ), durationMs = 1000
+                            )
+                            viewModel.handleIntent(
+                                MainMapIntent.LookAroundCurrentLocation(
+                                    LocationUIModel(
+                                        latitude = location.latitude,
+                                        longitude = location.longitude
+                                    )
+                                )
+                            )
+                        } catch (e: Exception) {
+                            // todo 에러 처리
+                        }
+
+                    }
                 }
             }
         }
@@ -99,8 +135,23 @@ fun MainPhotoMapScreen(
                 GoogleMap(
                     modifier = modifier
                         .fillMaxSize(),
-                )
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(isMyLocationEnabled = false),
+                ) {
+
+                }
+
                 Column(modifier = Modifier.align(alignment = Alignment.TopEnd)) {
+
+                    CurrentLocationWithPermissionNoticeExtendedFloatButton(
+                        modifier = Modifier.align(Alignment.End),
+                        permissionState = permissionState,
+                        targetPermissionList = locationPermissions,
+                        onClick = { hasPermission ->
+                            if (hasPermission) viewModel.handleIntent(MainMapIntent.SearchAndMoveToCurrentLocation)
+                            else viewModel.handleIntent(MainMapIntent.GoToAcceptPermission)
+                        }
+                    )
 
                     SyncWithPermissionNoticeExtendedFloatButton(
                         modifier = Modifier.align(Alignment.End),
@@ -112,15 +163,6 @@ fun MainPhotoMapScreen(
                         }
                     )
 
-                    CurrentLocationWithPermissionNoticeExtendedFloatButton(
-                        modifier = Modifier.align(Alignment.End),
-                        permissionState = permissionState,
-                        targetPermissionList = locationPermissions,
-                        onClick = { hasPermission ->
-                            if (hasPermission) viewModel
-                            else viewModel.handleIntent(MainMapIntent.GoToAcceptPermission)
-                        }
-                    )
 
                 }
 
