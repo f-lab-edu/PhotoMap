@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.maps.compose.widgets)
     implementation(libs.accompanist.permissions)
     implementation(libs.navigation.compose)
+    implementation(libs.timber)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)

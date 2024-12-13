@@ -25,6 +25,7 @@ import ny.photomap.model.FileAcceptPermissionState
 import ny.photomap.model.LocationPermissionState
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
+import timber.log.Timber
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -58,7 +59,7 @@ fun MainPhotoMapScreen(
                             acceptedPermission = locationPermission
                         )
                     )
-                    println("permission response : $permissionResponse")
+                    Timber.d("permission response : $permissionResponse")
                     viewModel.handleIntent(MainMapIntent.ResponsePermissionRequest(permissionState = permissionResponse))
                 }
             )
