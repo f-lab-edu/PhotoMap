@@ -7,20 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -30,11 +23,7 @@ import kotlinx.coroutines.flow.collectLatest
 import ny.photomap.model.AcceptPermissionState
 import ny.photomap.model.FileAcceptPermissionState
 import ny.photomap.model.LocationPermissionState
-import ny.photomap.permission.PermissionRequestNotice
-import ny.photomap.permission.isGranted
-import ny.photomap.permission.isGrantedReadMediaVisualUserSelected
 import ny.photomap.permission.locationPermissions
-import ny.photomap.permission.readImagePermission
 import ny.photomap.permission.readImagePermissions
 
 @OptIn(ExperimentalPermissionsApi::class)
@@ -46,11 +35,32 @@ fun MainPhotoMapScreen(
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
 
         val context = LocalContext.current
-        val fileReadPermission = readImagePermission
+        val permissionList = locationPermissions + readImagePermissions
 
         val permissionState =
             rememberMultiplePermissionsState(
-                permissions = fileReadPermission.permissionList ?: emptyList()
+                permissions = permissionList,
+                onPermissionsResult = { map ->
+                    val imageAccessPermission =
+                        map.getOrDefault(readImagePermissions.firstOrNull(), false)
+                    val imageVisualUserSelectedPermission = map.getOrDefault(
+                        if (readImagePermissions.size > 1) readImagePermissions.last() else null,
+                        false
+                    )
+                    val locationPermission = locationPermissions.any { map.getOrDefault(it, false) }
+
+                    val permissionResponse = AcceptPermissionState(
+                        filePermission = FileAcceptPermissionState(
+                            acceptedPermission = imageAccessPermission,
+                            visualUserSelectedPermission = imageVisualUserSelectedPermission
+                        ),
+                        locationPermission = LocationPermissionState(
+                            acceptedPermission = locationPermission
+                        )
+                    )
+                    println("permission response : $permissionResponse")
+                    viewModel.handleIntent(MainMapIntent.ResponsePermissionRequest(permissionState = permissionResponse))
+                }
             )
 
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -62,7 +72,7 @@ fun MainPhotoMapScreen(
         LaunchedEffect(Unit) {
             viewModel.effect.collectLatest { effect ->
                 when (effect) {
-                    MainMapEffect.RequestImagePermission -> permissionState.launchMultiplePermissionRequest()
+                    MainMapEffect.RequestPermissions -> permissionState.launchMultiplePermissionRequest()
 
                     MainMapEffect.NavigateToAppSetting -> context.startActivity(
                         Intent(
@@ -74,24 +84,9 @@ fun MainPhotoMapScreen(
                     is MainMapEffect.NavigateToDetailLocationMap -> {}
                     is MainMapEffect.NavigateToPhoto -> {}
                     is MainMapEffect.Error -> {}
+                    MainMapEffect.MoveToCurrentLocation -> {}
                 }
             }
-        }
-
-        LaunchedEffect(permissionState) {
-            val permissionResponse = AcceptPermissionState(
-                filePermission = FileAcceptPermissionState(
-                    acceptedPermission = permissionState.isGranted(readImagePermissions.firstOrNull()),
-                    visualUserSelectedPermission = permissionState.isGrantedReadMediaVisualUserSelected()
-                ),
-                locationPermission = LocationPermissionState(
-                    acceptedPermission = locationPermissions.any { permissionState.isGranted(it) }
-                )
-            )
-            println("파일 권한 : ${permissionState.isGranted(readImagePermissions.firstOrNull())}")
-            println("파일 권한 사용자  : ${permissionState.isGrantedReadMediaVisualUserSelected()}")
-            println("위치 권한 : ${locationPermissions.any { permissionState.isGranted(it) }}")
-            viewModel.handleIntent(MainMapIntent.ResponsePermissionRequest(permissionState = permissionResponse))
         }
 
         Column(
@@ -99,26 +94,6 @@ fun MainPhotoMapScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            println("** 파일 권한 : ${state.permissionState.filePermission.acceptedPermission}")
-            if (!state.permissionState.filePermission.acceptedPermission) {
-                val title: String = stringResource(R.string.permission_read_image_title)
-                val description: String =
-                    if (state.permissionState.filePermission.visualUserSelectedPermission) {
-                        stringResource(R.string.permission_read_image_visual_user_selected_description)
-                    } else {
-                        stringResource(R.string.permission_read_image_description)
-                    }
-
-                PermissionRequestNotice(
-                    modifier = Modifier,
-                    title = title,
-                    description = description,
-                    requestButtonText = "권한 요청하기",
-                    onClickRequestButton = {
-
-                    }
-                )
-            }
             Box {
                 GoogleMap(
                     modifier = modifier
@@ -126,25 +101,26 @@ fun MainPhotoMapScreen(
                 )
                 Column(modifier = Modifier.align(alignment = Alignment.TopEnd)) {
 
-                    SmallFloatingActionButton(
-                        onClick = {
-                        },
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.secondary
-                    ) {
-                        Icon(Icons.Filled.Refresh, "Small floating action button.")
-                    }
+                    SyncWithPermissionNoticeExtendedFloatButton(
+                        modifier = Modifier.align(Alignment.End),
+                        permissionState = permissionState,
+                        targetPermissionList = readImagePermissions,
+                        onClick = { hasPermission ->
+                            if (hasPermission) viewModel.handleIntent(MainMapIntent.Sync)
+                            else viewModel.handleIntent(MainMapIntent.GoToAcceptPermission)
+                        }
+                    )
 
+                    CurrentLocationWithPermissionNoticeExtendedFloatButton(
+                        modifier = Modifier.align(Alignment.End),
+                        permissionState = permissionState,
+                        targetPermissionList = locationPermissions,
+                        onClick = { hasPermission ->
+                            if (hasPermission) viewModel
+                            else viewModel.handleIntent(MainMapIntent.GoToAcceptPermission)
+                        }
+                    )
 
-                    SmallFloatingActionButton(
-                        onClick = {
-
-                        },
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        contentColor = MaterialTheme.colorScheme.tertiary
-                    ) {
-                        Icon(Icons.Filled.LocationOn, "Small floating action button.")
-                    }
                 }
 
             }

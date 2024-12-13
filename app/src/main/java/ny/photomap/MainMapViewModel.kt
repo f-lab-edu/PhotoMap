@@ -28,7 +28,8 @@ sealed interface MainMapIntent {
     // 싱크 진행
     object Sync : MainMapIntent
 
-//    data class GoAppSettingToAcceptPermission(val permission: String) : MainMapIntent
+    // 현재 위치로 이동
+    object MoveToCurrentLocation: MainMapIntent
 
     // 사진 마커 선택
     data class SelectPhotoLocationMarker(
@@ -42,8 +43,11 @@ sealed interface MainMapIntent {
     // 사진 선택
     data class SelectPhoto(val targetPhoto: PhotoLocationUiModel) : MainMapIntent
 
+    // 권한 요청에 응답함
     data class ResponsePermissionRequest(val permissionState: AcceptPermissionState) : MainMapIntent
 
+    // 권한 주겠다
+    object GoToAcceptPermission : MainMapIntent
 }
 
 data class MainMapState(
@@ -56,8 +60,9 @@ data class MainMapState(
 )
 
 sealed interface MainMapEffect {
-    object RequestImagePermission : MainMapEffect
+    object RequestPermissions : MainMapEffect
     object NavigateToAppSetting : MainMapEffect
+    object MoveToCurrentLocation : MainMapEffect
     data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUiModel) : MainMapEffect
     data class NavigateToPhoto(val targetPhoto: PhotoLocationUiModel) : MainMapEffect
     data class Error(val message: String) : MainMapEffect
@@ -87,7 +92,7 @@ class MainMapViewModel @Inject constructor(
         return when (intent) {
             MainMapIntent.CheckSyncTime -> checkSyncState()
                 .onResponse(ifSuccess = {
-                    _effect.emit(MainMapEffect.RequestImagePermission)
+                    _effect.emit(MainMapEffect.RequestPermissions)
                     state.copy(loading = true)
                 }, ifFailure = {
                     // 룸 데이터 긇어와서 화면에 노출
@@ -127,6 +132,14 @@ class MainMapViewModel @Inject constructor(
                     locationPermission = intent.permissionState.locationPermission.copy()
                 )
             )
+
+            MainMapIntent.GoToAcceptPermission -> state.apply {
+                _effect.emit(MainMapEffect.NavigateToAppSetting)
+            }
+
+            MainMapIntent.MoveToCurrentLocation -> state.apply {
+                _effect.emit(MainMapEffect.MoveToCurrentLocation)
+            }
         }
     }
 }
