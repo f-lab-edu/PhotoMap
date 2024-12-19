@@ -23,4 +23,5 @@ class CheckSyncStateUseCase @Inject constructor(
     }
 
     data class CheckSyncStatusUseCaseReturn(val shouldSync: Boolean, val lastSyncTime: Long?)
+
 }

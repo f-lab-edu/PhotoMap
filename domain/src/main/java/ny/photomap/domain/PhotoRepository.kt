@@ -30,6 +30,10 @@ interface PhotoRepository {
         endTime: Long,
     ): Result<List<PhotoLocationModel>>
 
+    suspend fun initializePhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
+
+    suspend fun getLatestPhotoLocation() : Result<PhotoLocationModel?>
+
     // todo 추후 작업
     /*suspend fun getPhotoLocationWithOffset(
         latitude: Double,

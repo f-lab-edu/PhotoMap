@@ -75,7 +75,19 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-// todo 추후 작업
+    override suspend fun initializePhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
+        return runResultCatching {
+            dataSource.initializePhotoLocation(list.map(PhotoLocationModel::toEntity))
+        }
+    }
+
+    override suspend fun getLatestPhotoLocation(): Result<PhotoLocationModel?> {
+        return runResultCatching {
+            dataSource.getLatestPhotoLocation()?.toModel()
+        }
+    }
+
+    // todo 추후 작업
     /*override suspend fun getPhotoLocationWithOffset(
         latitude: Double,
         longitude: Double,

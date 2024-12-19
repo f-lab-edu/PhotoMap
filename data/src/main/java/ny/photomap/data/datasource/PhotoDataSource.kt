@@ -31,6 +31,10 @@ interface PhotoDataSource {
         endTime: Long,
     ): List<PhotoLocationEntity>
 
+    suspend fun initializePhotoLocation(list: List<PhotoLocationEntity>)
+
+    suspend fun getLatestPhotoLocation() : PhotoLocationEntity?
+
     // todo 추후 기능 추가
     /*    suspend fun getPhotoLocationWithOffset(
             latitude: Double,

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Dao
 interface PhotoLocationDao {
@@ -55,5 +56,14 @@ interface PhotoLocationDao {
 
     @Query("DELETE FROM photo_location_table")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun initialize(entityList: List<PhotoLocationEntity>) {
+        deleteAll()
+        insertAll(entityList)
+    }
+
+    @Query("SELECT * FROM photo_location_table ORDER BY generatedTime, addedTime DESC LIMIT 1")
+    suspend fun getLatest() : PhotoLocationEntity?
 
 }

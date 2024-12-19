@@ -16,6 +16,7 @@ import ny.photomap.domain.usecase.CheckSyncStateUseCase
 import ny.photomap.domain.usecase.SyncPhotoUseCase
 import ny.photomap.permission.MediaPermissionData
 import ny.photomap.permission.readImagePermission
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -89,6 +90,7 @@ class MainViewModel @Inject constructor(
     suspend fun syncPhotoStorage() {
         syncPhoto().onSuccess {
             onEvent(MainEvent.SyncFinished)
+            Timber.d("싱크 성공")
         }.onFailure {
             onEvent(MainEvent.SyncFailed)
         }

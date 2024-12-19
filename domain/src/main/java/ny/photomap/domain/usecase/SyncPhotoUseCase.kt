@@ -10,8 +10,7 @@ class SyncPhotoUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(): Result<Unit> {
         return repository.fetchAllPhotoLocation().suspendFlatMap { list ->
-            repository.deleteAllPhotoLocation()
-            when (val result = repository.saveAllPhotoLocation(list)) {
+            when (val result = repository.initializePhotoLocation(list)) {
                 is Result.Success -> Result.Success(Unit)
                 else -> Result.Failure(result.throwableOrNull())
             }

@@ -12,4 +12,14 @@
     <string name="button_request_file_permission_with_denied">사진 업데이트를 위해 권한이 필요해요</string>
     <string name="button_current_location">현재 위치로 이동하기</string>
     <string name="button_request_location_permission_with_denied">현재 위치를 알기 위해서는 권한이 필요해요</string>
+    <string name="sync_update_complete">최신 사진 업데이트를 성공했습니다.</string>
+    <string name="sync_update_fail">최신 사진 업데이트를 실패했습니다.</string>
+    <string name="success">성공</string>
+    <string name="failure">실패</string>
+    <string name="notice_move_to_latest_photo_location">가장 최근 사진의 위치로 이동합니다.</string>
+    <string name="notice_deny_location_permission">현재 위치로 이동하는 기능을 이용할 수 없습니다.</string>
+    <string-array name="loading_sync">
+        <item>최신 사진 정보로 업데이트 중입니다.</item>
+        <item>사진의 양에 따라 2~3분 걸릴 수 있습니다.</item>
+    </string-array>
 </resources>

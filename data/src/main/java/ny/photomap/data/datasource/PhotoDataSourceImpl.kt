@@ -192,6 +192,13 @@ class PhotoDataSourceImpl @Inject constructor(
             ExifInterface(inputStream)
         }
 
+    override suspend fun initializePhotoLocation(list: List<PhotoLocationEntity>) {
+        photoLocationDao.initialize(entityList = list)
+    }
+
+    override suspend fun getLatestPhotoLocation(): PhotoLocationEntity? {
+        return photoLocationDao.getLatest()
+    }
 
     // todo 추후 기능 추가
     /* override suspend fun getPhotoLocationWithOffset(
