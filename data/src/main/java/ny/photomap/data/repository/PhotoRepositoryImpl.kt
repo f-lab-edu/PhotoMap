@@ -25,14 +25,13 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-    override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> = runResultCatching {
-        dataSource.saveLatestFetchTime(fetchTime)
-
+    override suspend fun saveLatestUpdateTime(): Result<Unit> = runResultCatching {
+        dataSource.saveLatestUpdateTime()
     }
 
 
-    override suspend fun getLatestFetchTime(): Result<Long> = runResultCatching {
-        dataSource.getLatestFetchTime()
+    override suspend fun getLatestUpdateTime(): Result<Long> = runResultCatching {
+        dataSource.getLatestUpdateTime()
     }
 
     override suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {

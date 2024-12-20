@@ -8,9 +8,9 @@ interface PhotoRepository {
 
     suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationModel>>
 
-    suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit>
+    suspend fun saveLatestUpdateTime(): Result<Unit>
 
-    suspend fun getLatestFetchTime(): Result<Long>
+    suspend fun getLatestUpdateTime(): Result<Long>
 
     suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
 

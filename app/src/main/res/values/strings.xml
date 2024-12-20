@@ -18,8 +18,12 @@
     <string name="failure">실패</string>
     <string name="notice_move_to_latest_photo_location">가장 최근 사진의 위치로 이동합니다.</string>
     <string name="notice_deny_location_permission">현재 위치로 이동하는 기능을 이용할 수 없습니다.</string>
+    <string name="button_progress">진행</string>
+    <string name="button_reject">그만두기</string>
+    <string name="dialog_sync_first">원활한 앱 사용을 위해서 사진 정보를 불러와야 합니다. 이 과정에서 권한 요청을 진행하고 있습니다.</string>
+    <string name="dialog_sync_request">사진 정보를 업데이트한 지 7일이 지났습니다. 업데이트를 진행할까요?</string>
     <string-array name="loading_sync">
         <item>최신 사진 정보로 업데이트 중입니다.</item>
-        <item>사진의 양에 따라 2~3분 걸릴 수 있습니다.</item>
+        <item>사진의 양에 따라 수 분의 시간이 걸릴 수 있습니다.</item>
     </string-array>
 </resources>

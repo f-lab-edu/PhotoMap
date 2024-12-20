@@ -11,7 +11,11 @@ class SyncPhotoUseCase @Inject constructor(
     suspend operator fun invoke(): Result<Unit> {
         return repository.fetchAllPhotoLocation().suspendFlatMap { list ->
             when (val result = repository.initializePhotoLocation(list)) {
-                is Result.Success -> Result.Success(Unit)
+                is Result.Success -> {
+                    repository.saveLatestUpdateTime()
+                    Result.Success(Unit)
+                }
+
                 else -> Result.Failure(result.throwableOrNull())
             }
         }

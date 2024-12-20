@@ -13,6 +13,7 @@ import androidx.exifinterface.media.ExifInterface.TAG_OFFSET_TIME_ORIGINAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import ny.photomap.domain.TimeStamp
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
@@ -26,6 +27,7 @@ class PhotoDataSourceImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val photoLocationDao: PhotoLocationDao,
     private val preferences: PhotoLocationPreferencesImpl,
+    private val timeStamp: TimeStamp,
 ) : PhotoDataSource {
 
     private val projection = arrayOf(
@@ -141,11 +143,11 @@ class PhotoDataSourceImpl @Inject constructor(
             queryToList(getQueryAfter(fetchTime))
         }
 
-    override suspend fun saveLatestFetchTime(fetchTime: Long) {
-        return preferences.updateTimeSyncDatabase(fetchTime)
+    override suspend fun saveLatestUpdateTime() {
+        return preferences.updateTimeSyncDatabase(timeStamp.currentTime)
     }
 
-    override suspend fun getLatestFetchTime(): Long {
+    override suspend fun getLatestUpdateTime(): Long {
         return preferences.timeSyncDatabaseFlow.first()
     }
 

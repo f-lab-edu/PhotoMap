@@ -52,7 +52,7 @@ sealed interface MainMapIntent {
         val targetPhoto: PhotoLocationUIModel,
     ) : MainMapIntent
 
-    // 사진 위치 정보 선택f
+    // 사진 위치 정보 선택
     data class SelectLocation(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
 
     // 사진 선택
@@ -71,7 +71,7 @@ data class MainMapState(
 )
 
 sealed interface MainMapEffect {
-    object RequestPermissions : MainMapEffect
+    data class RequestPermissions(val isFirstAppUsage: Boolean) : MainMapEffect
     object NavigateToAppSetting : MainMapEffect
     object MoveToCurrentLocation : MainMapEffect
     data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
@@ -110,8 +110,11 @@ class MainMapViewModel @Inject constructor(
                 .onResponse(ifSuccess = {
                     Timber.d("싱크 진행을 위해 권한 요청")
                     Timber.d("싱크 진행 여부 : ${it.shouldSync}, 최근 업데이트 시간 : ${it.lastSyncTime}")
-                    if(it.shouldSync) {
-                        _effect.emit(MainMapEffect.RequestPermissions)
+                    if (it.shouldSync) {
+                        _effect.emit(MainMapEffect.RequestPermissions(it.lastSyncTime == 0L))
+                    } else {
+                        Timber.d("싱크 없이 진행")
+                        // todo
                     }
 
                     state
@@ -124,6 +127,7 @@ class MainMapViewModel @Inject constructor(
                 })
 
             MainMapIntent.Sync -> {
+                // todo 작업 중 노티피케이션
                 viewModelScope.launch(Dispatchers.Default) {
                     syncPhoto().onResponse(ifSuccess = {
                         Timber.d("싱크 완료")

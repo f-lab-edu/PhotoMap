@@ -9,9 +9,9 @@ interface PhotoDataSource {
 
     suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData>
 
-    suspend fun saveLatestFetchTime(fetchTime: Long)
+    suspend fun saveLatestUpdateTime()
 
-    suspend fun getLatestFetchTime(): Long
+    suspend fun getLatestUpdateTime(): Long
 
     suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>)
 

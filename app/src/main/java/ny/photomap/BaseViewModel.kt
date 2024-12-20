@@ -1,4 +1,4 @@
-package ny
+package ny.photomap
 
 import androidx.lifecycle.ViewModel
 import ny.photomap.domain.Result

@@ -1,28 +1,25 @@
 package ny.photomap
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -30,7 +27,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
-
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -91,9 +87,11 @@ fun MainPhotoMapScreen(
 
         val cameraPositionState = rememberCameraPositionState()
 
-
         val fusedLocationClient =
             remember { LocationServices.getFusedLocationProviderClient(context) }
+
+        var showAskingPermissionDialog by remember { mutableStateOf(false) }
+        var isFirstAppUsage by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             viewModel.handleIntent(MainMapIntent.CheckSyncTime)
@@ -103,7 +101,10 @@ fun MainPhotoMapScreen(
             viewModel.effect.collectLatest { effect ->
                 Timber.d("effect: $effect")
                 when (effect) {
-                    MainMapEffect.RequestPermissions -> permissionState.launchMultiplePermissionRequest()
+                    is MainMapEffect.RequestPermissions -> {
+                        isFirstAppUsage = effect.isFirstAppUsage
+                        showAskingPermissionDialog = true
+                    }
 
                     MainMapEffect.NavigateToAppSetting -> context.startActivity(
                         Intent(
@@ -122,37 +123,47 @@ fun MainPhotoMapScreen(
                         snackBarHostState.showSnackbar(message = context.getString(effect.message))
                     }
 
-                    MainMapEffect.MoveToCurrentLocation -> {
-                        try {
-                            val location = fusedLocationClient.lastLocation.await()
-                            Timber.d("location : $location")
-                            cameraPositionState.animate(
-                                update =
-                                CameraUpdateFactory.newLatLngZoom(
-                                    LatLng(
-                                        location.latitude,
-                                        location.longitude
-                                    ), 15.0f
-                                ), durationMs = 1500
-                            )
-                            viewModel.handleIntent(
-                                MainMapIntent.LookAroundCurrentLocation(
-                                    LocationUIModel(
-                                        latitude = location.latitude,
-                                        longitude = location.longitude
-                                    )
+
+                    MainMapEffect.MoveToCurrentLocation,
+                        -> try {
+                        @SuppressLint("MissingPermission")
+                        val location = fusedLocationClient.lastLocation.await()
+                        Timber.d("location : $location")
+                        cameraPositionState.animate(
+                            update =
+                            CameraUpdateFactory.newLatLngZoom(
+                                LatLng(
+                                    location.latitude,
+                                    location.longitude
+                                ), 15.0f
+                            ), durationMs = 1500
+                        )
+                        viewModel.handleIntent(
+                            MainMapIntent.LookAroundCurrentLocation(
+                                LocationUIModel(
+                                    latitude = location.latitude,
+                                    longitude = location.longitude
                                 )
                             )
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            Timber.d("위치 조회 에러 : e")
-                        }
+                        )
 
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        Timber.d("위치 조회 에러 : e")
                     }
+
                 }
             }
         }
 
+        if (showAskingPermissionDialog) {
+            AskingPermissionDialog(isFirstUsage = isFirstAppUsage, onConfirm = {
+                showAskingPermissionDialog = false
+                permissionState.launchMultiplePermissionRequest()
+            }) {
+                showAskingPermissionDialog = false
+            }
+        }
 
 
         Column(
@@ -205,5 +216,4 @@ fun MainPhotoMapScreen(
         }
 
     }
-
 }
