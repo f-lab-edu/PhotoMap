@@ -74,6 +74,37 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): Result<List<PhotoLocationModel>> {
+        return runResultCatching {
+            dataSource.getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+            ).map(PhotoLocationEntity::toModel)
+        }
+    }
+
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): Result<List<PhotoLocationModel>> {
+        return runResultCatching {
+            dataSource.getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+                startTime = startTime, endTime = endTime
+            ).map(PhotoLocationEntity::toModel)
+        }
+    }
+
     override suspend fun initializePhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
         return runResultCatching {
             dataSource.initializePhotoLocation(list.map(PhotoLocationModel::toEntity))

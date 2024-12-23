@@ -30,6 +30,22 @@ interface PhotoRepository {
         endTime: Long,
     ): Result<List<PhotoLocationModel>>
 
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): Result<List<PhotoLocationModel>>
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): Result<List<PhotoLocationModel>>
+
     suspend fun initializePhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
 
     suspend fun getLatestPhotoLocation() : Result<PhotoLocationModel?>

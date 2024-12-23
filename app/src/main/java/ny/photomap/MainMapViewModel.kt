@@ -7,18 +7,25 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ny.photomap.domain.model.PhotoLocationModel
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
 import ny.photomap.domain.usecase.GetLatestPhotoLocationUseCase
+import ny.photomap.domain.usecase.GetPhotoLocationUseCase
 import ny.photomap.domain.usecase.SyncPhotoUseCase
+import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.model.LocationUIModel
 import ny.photomap.model.PhotoLocationUIModel
+import ny.photomap.model.toPhotoLocationUiModel
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.List
@@ -43,12 +50,12 @@ sealed interface MainMapIntent {
     // 현재 위치로 이동
     object SearchCurrentLocation : MainMapIntent
 
-    // 현재 위치로 이동해 지도의 사진들 보기
-    data class LookAroundCurrentLocation(val location: LocationUIModel) : MainMapIntent
+    // 현재 위치의 지도 범위의 지도의 사진들 보기
+    data class LookAroundCurrentLocation(val locationBounds: LocationBoundsUIModel) : MainMapIntent
 
     // 사진 마커 선택
     data class SelectPhotoLocationMarker(
-        val photoList: List<String>,
+        val photoList: List<PhotoLocationUIModel>,
         val targetPhoto: PhotoLocationUIModel,
     ) : MainMapIntent
 
@@ -65,7 +72,6 @@ sealed interface MainMapIntent {
 
 data class MainMapState(
     val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0),
-    val photoList: List<String> = emptyList(),
     val targetPhoto: PhotoLocationUIModel? = null,
     val loading: Boolean = false,
 )
@@ -85,6 +91,7 @@ class MainMapViewModel @Inject constructor(
     private val checkSyncState: CheckSyncStateUseCase,
     private val syncPhoto: SyncPhotoUseCase,
     private val getLatestPhotoLocation: GetLatestPhotoLocationUseCase,
+    private val getPhotoLocationUseCase: GetPhotoLocationUseCase,
 ) : ViewModel() {
 
     private val _effect = MutableSharedFlow<MainMapEffect>()
@@ -92,10 +99,15 @@ class MainMapViewModel @Inject constructor(
 
     private val intent = Channel<MainMapIntent>()
 
-    val state = intent.receiveAsFlow().runningFold(MainMapState(), ::reducer)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, MainMapState(loading = false))
+    val state = intent.receiveAsFlow().runningFold(MainMapState()) { state, intent ->
+        withContext(Dispatchers.Default) {
+            reducer(state, intent)
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, MainMapState(loading = false))
 
-    private var currentLocation: LocationUIModel? = null
+    private val _photoList = MutableStateFlow<List<PhotoLocationUIModel>>(emptyList())
+    val photoList: StateFlow<List<PhotoLocationUIModel>> = _photoList
+
 
     fun handleIntent(event: MainMapIntent) {
         viewModelScope.launch {
@@ -152,7 +164,6 @@ class MainMapViewModel @Inject constructor(
 
             is MainMapIntent.SelectPhotoLocationMarker -> state.copy(
                 cameraLocation = intent.targetPhoto.location,
-                photoList = intent.photoList,
                 targetPhoto = intent.targetPhoto,
                 loading = false,
             )
@@ -172,14 +183,6 @@ class MainMapViewModel @Inject constructor(
                     ifSuccess = { latestData ->
                         latestData?.let {
                             _effect.emit(MainMapEffect.Notice(R.string.notice_move_to_latest_photo_location))
-                            handleIntent(
-                                MainMapIntent.LookAroundCurrentLocation(
-                                    LocationUIModel(
-                                        latitude = it.latitude,
-                                        longitude = it.longitude
-                                    )
-                                )
-                            )
                         } ?: run {
                             _effect.emit(MainMapEffect.Notice(R.string.notice_deny_location_permission))
                         }
@@ -199,14 +202,24 @@ class MainMapViewModel @Inject constructor(
                 _effect.emit(MainMapEffect.MoveToCurrentLocation)
             }
 
-            is MainMapIntent.LookAroundCurrentLocation -> state.copy(
-                cameraLocation = intent.location
-            ).apply {
-                currentLocation = intent.location
-                // todo 데이터 베이스 정보 불러서 state에 넣기
+            is MainMapIntent.LookAroundCurrentLocation -> {
+                val result = getPhotoLocationUseCase(
+                    northLatitude = intent.locationBounds.northLatitude,
+                    southLatitude = intent.locationBounds.southLatitude,
+                    eastLongitude = intent.locationBounds.eastLongitude,
+                    westLongitude = intent.locationBounds.westLongitude
+                )
+
+                Timber.d("사진 조회 범위- ${intent.locationBounds}")
+                Timber.d("result size : ${result.getOrNull()?.size}")
+
+                val list = result.getOrNull()?.map(PhotoLocationModel::toPhotoLocationUiModel)
+                    ?: emptyList<PhotoLocationUIModel>()
+
+                _photoList.value = list
+
+                state
             }
-        }.apply {
-            Timber.d("reducer result state : $this")
         }
     }
 

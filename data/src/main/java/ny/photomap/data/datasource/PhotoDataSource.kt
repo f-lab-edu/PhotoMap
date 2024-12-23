@@ -31,6 +31,23 @@ interface PhotoDataSource {
         endTime: Long,
     ): List<PhotoLocationEntity>
 
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): List<PhotoLocationEntity>
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): List<PhotoLocationEntity>
+
+
     suspend fun initializePhotoLocation(list: List<PhotoLocationEntity>)
 
     suspend fun getLatestPhotoLocation() : PhotoLocationEntity?

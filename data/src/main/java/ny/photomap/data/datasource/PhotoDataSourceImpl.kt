@@ -3,8 +3,10 @@ package ny.photomap.data.datasource
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Size
 import androidx.core.database.getStringOrNull
 import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
@@ -13,11 +15,12 @@ import androidx.exifinterface.media.ExifInterface.TAG_OFFSET_TIME_ORIGINAL
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import ny.photomap.domain.TimeStamp
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
+import ny.photomap.domain.TimeStamp
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -81,13 +84,17 @@ class PhotoDataSourceImpl @Inject constructor(
 
                 val name = cursor.getStringOrNull(nameColumn)
                 val addedTime: Long? = cursor.getLong(addedTimeColumn)
-                var takenTime: Long? = cursor.getLong(takenTimeColumn)
+                val takenTime: Long? = cursor.getLong(takenTimeColumn)
+
+                val thumbnail = contentResolver.loadThumbnail(uri, Size(150, 150), null)
+
 
                 createPhotoLocationData(
                     uri = uri,
                     name = name,
                     addedTime = addedTime,
-                    takenTime = takenTime
+                    takenTime = takenTime,
+                    thumbnail = thumbnail
                 )?.let { data ->
                     list.add(data)
                 }
@@ -101,6 +108,7 @@ class PhotoDataSourceImpl @Inject constructor(
         name: String?,
         addedTime: Long?,
         takenTime: Long?,
+        thumbnail: Bitmap,
     ): PhotoLocationData? {
         return getExifInterface(uri)?.let {
             val generatedTime =
@@ -108,6 +116,8 @@ class PhotoDataSourceImpl @Inject constructor(
                     it.getAttribute(TAG_DATETIME_ORIGINAL),
                     it.getAttribute(TAG_OFFSET_TIME_ORIGINAL)
                 ) ?: takenTime
+
+
             if (generatedTime != null && addedTime != null && it.latLong != null) {
                 val latitude = it.latLong!![0]
                 val longitude = it.latLong!![1]
@@ -118,9 +128,16 @@ class PhotoDataSourceImpl @Inject constructor(
                     longitude = longitude,
                     generatedTime = generatedTime,
                     addedTime = addedTime,
-                    thumbNail = it.thumbnail
+                    thumbNail = convertBitmapToBiteArray(thumbnail)
                 )
             } else null
+        }
+    }
+
+    fun convertBitmapToBiteArray(bitmap: Bitmap): ByteArray {
+        return ByteArrayOutputStream().use {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+            it.toByteArray()
         }
     }
 
@@ -188,6 +205,69 @@ class PhotoDataSourceImpl @Inject constructor(
             toTime = endTime
         )
 
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): List<PhotoLocationEntity> {
+        return if (westLongitude <= eastLongitude) {
+            photoLocationDao.getLocationOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = eastLongitude,
+                westLongitude = westLongitude
+            )
+        } else {
+            photoLocationDao.getLocationOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = eastLongitude,
+                westLongitude = 180.0
+            ) + photoLocationDao.getLocationOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = -180.0,
+                westLongitude = westLongitude
+            )
+        }
+    }
+
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): List<PhotoLocationEntity> {
+        return if (westLongitude <= eastLongitude) {
+            photoLocationDao.getLocationAndDateOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = eastLongitude,
+                westLongitude = westLongitude,
+                fromTime = startTime,
+                toTime = endTime
+            )
+        } else {
+            photoLocationDao.getLocationAndDateOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = eastLongitude,
+                westLongitude = 180.0,
+                fromTime = startTime,
+                toTime = endTime
+            ) + photoLocationDao.getLocationAndDateOf(
+                northLatitude = northLatitude,
+                southLatitude = southLatitude,
+                eastLongitude = -180.0,
+                westLongitude = westLongitude,
+                fromTime = startTime,
+                toTime = endTime
+            )
+        }
+    }
 
     fun getExifInterface(uri: Uri): ExifInterface? =
         contentResolver.openInputStream(uri)?.use { inputStream ->

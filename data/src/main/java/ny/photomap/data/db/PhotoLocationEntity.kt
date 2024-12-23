@@ -15,7 +15,7 @@ data class PhotoLocationEntity(
     val generatedTime: Long,
     val addedTime: Long,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
-    val thumbNail: ByteArray?,
+    val thumbNail: ByteArray,
 ) : ModelMapper<PhotoLocationModel> {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0

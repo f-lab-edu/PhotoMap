@@ -10,7 +10,7 @@ data class PhotoLocationData(
     val longitude: Double,
     val generatedTime: Long,
     val addedTime: Long,
-    val thumbNail: ByteArray?,
+    val thumbNail: ByteArray,
 ) : ModelMapper<PhotoLocationModel> {
     override fun toModel(): PhotoLocationModel = PhotoLocationModel(
         uri = this@PhotoLocationData.uri.toString(),

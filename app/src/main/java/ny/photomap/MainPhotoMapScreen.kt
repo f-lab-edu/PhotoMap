@@ -1,5 +1,6 @@
 package ny.photomap
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
@@ -29,15 +30,18 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
-import ny.photomap.model.LocationUIModel
+import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
+import ny.photomap.ui.marker.PhotoLocationClustering
 import timber.log.Timber
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, MapsComposeExperimentalApi::class)
 @Composable
 fun MainPhotoMapScreen(
     modifier: Modifier,
@@ -53,7 +57,8 @@ fun MainPhotoMapScreen(
         }) { padding ->
 
         val context = LocalContext.current
-        val permissionList = locationPermissions + readImagePermissions
+        val permissionList =
+            locationPermissions + readImagePermissions + listOf(Manifest.permission.ACCESS_MEDIA_LOCATION)
 
         val permissionState =
             rememberMultiplePermissionsState(
@@ -84,6 +89,7 @@ fun MainPhotoMapScreen(
             )
 
         val state by viewModel.state.collectAsStateWithLifecycle()
+        val photoList by viewModel.photoList.collectAsStateWithLifecycle()
 
         val cameraPositionState = rememberCameraPositionState()
 
@@ -113,8 +119,14 @@ fun MainPhotoMapScreen(
                         )
                     )
 
-                    is MainMapEffect.NavigateToDetailLocationMap -> {}
-                    is MainMapEffect.NavigateToPhoto -> {}
+                    is MainMapEffect.NavigateToDetailLocationMap -> {
+
+                    }
+
+                    is MainMapEffect.NavigateToPhoto -> {
+
+                    }
+
                     is MainMapEffect.Notice -> {
                         snackBarHostState.showSnackbar(message = context.getString(effect.message))
                     }
@@ -130,26 +142,17 @@ fun MainPhotoMapScreen(
                         val location = fusedLocationClient.lastLocation.await()
                         Timber.d("location : $location")
                         cameraPositionState.animate(
-                            update =
-                            CameraUpdateFactory.newLatLngZoom(
+                            update = CameraUpdateFactory.newLatLngZoom(
                                 LatLng(
                                     location.latitude,
                                     location.longitude
                                 ), 15.0f
                             ), durationMs = 1500
                         )
-                        viewModel.handleIntent(
-                            MainMapIntent.LookAroundCurrentLocation(
-                                LocationUIModel(
-                                    latitude = location.latitude,
-                                    longitude = location.longitude
-                                )
-                            )
-                        )
 
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        Timber.d("위치 조회 에러 : e")
+                        Timber.d("위치 조회 에러 : $e")
                     }
 
                 }
@@ -165,6 +168,32 @@ fun MainPhotoMapScreen(
             }
         }
 
+        LaunchedEffect(cameraPositionState.isMoving) {
+            if (cameraPositionState.isMoving) {
+                // 카메라 움직임 시작
+                Timber.d("카메라 이동 : ${cameraPositionState.cameraMoveStartedReason.name}, 시작 지점 : ${cameraPositionState.position.target}")
+
+            } else {
+                // 카메라 움직임 끝
+                Timber.d("카메라 이동 완료. 중심 : ${cameraPositionState.position.target}")
+                cameraPositionState.projection?.visibleRegion?.latLngBounds?.let { latLngBounds ->
+                    val northeast = latLngBounds.northeast
+                    val southwest = latLngBounds.southwest
+                    Timber.d("지도 보이는 영역 위경도 범위 - northeast : $northeast, southwest : $southwest")
+                    viewModel.handleIntent(
+                        MainMapIntent.LookAroundCurrentLocation(
+                            LocationBoundsUIModel(
+                                eastLongitude = northeast.longitude,
+                                westLongitude = southwest.longitude,
+                                northLatitude = northeast.latitude,
+                                southLatitude = southwest.latitude,
+                            )
+                        )
+                    )
+                }
+
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -177,8 +206,12 @@ fun MainPhotoMapScreen(
                         .fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = MapProperties(isMyLocationEnabled = false),
+                    onMapClick = { lnglat ->
+                        Timber.d("lnglat : $lnglat")
+                    },
+                    uiSettings = MapUiSettings(rotationGesturesEnabled = false)
                 ) {
-
+                    PhotoLocationClustering(photoList)
                 }
 
                 Column(modifier = Modifier.align(alignment = Alignment.TopEnd)) {
@@ -202,17 +235,15 @@ fun MainPhotoMapScreen(
                             else viewModel.handleIntent(MainMapIntent.GoToAcceptPermission)
                         }
                     )
-
-
-                }
-
-                if (state.loading) {
-                    Timber.d("로딩")
-                    SyncLoadingScreen()
                 }
 
             }
 
+        }
+
+        if (state.loading) {
+            Timber.d("로딩")
+            SyncLoadingScreen()
         }
 
     }

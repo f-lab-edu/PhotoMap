@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- margin   -->
     <dimen name="margin_small">3dp</dimen>
     <dimen name="margin_medium">15dp</dimen>
     <dimen name="margin_large">30dp</dimen>
+
+    <dimen name="size_thumbnail">40dp</dimen>
 </resources>
