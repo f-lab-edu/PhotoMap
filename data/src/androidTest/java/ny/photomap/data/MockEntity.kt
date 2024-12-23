@@ -17,7 +17,7 @@ val ENTITY_1 = PhotoLocationEntity(
     longitude = LOCATION_1.second,
     generatedTime = TIME_1,
     addedTime = TIME_1,
-    thumbNail = null,
+    thumbNail = byteArrayOf(),
 )
 
 val ENTITY_LIST: List<PhotoLocationEntity>
@@ -29,6 +29,6 @@ val ENTITY_LIST: List<PhotoLocationEntity>
             longitude = LOCATION_2.second + (it * 1),
             generatedTime = TIME_1 + (it * 10_000),
             addedTime = TIME_1 + (it * 20_000),
-            thumbNail = null,
+            thumbNail = byteArrayOf(),
         )
     }
