@@ -211,26 +211,12 @@ class PhotoDataSourceImpl @Inject constructor(
         eastLongitude: Double,
         westLongitude: Double,
     ): List<PhotoLocationEntity> {
-        return if (westLongitude <= eastLongitude) {
-            photoLocationDao.getLocationOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = eastLongitude,
-                westLongitude = westLongitude
-            )
-        } else {
-            photoLocationDao.getLocationOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = eastLongitude,
-                westLongitude = 180.0
-            ) + photoLocationDao.getLocationOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = -180.0,
-                westLongitude = westLongitude
-            )
-        }
+        return photoLocationDao.getLocationOf(
+            northLatitude = northLatitude,
+            southLatitude = southLatitude,
+            eastLongitude = eastLongitude,
+            westLongitude = westLongitude
+        )
     }
 
     override suspend fun getPhotoLocation(
@@ -241,32 +227,14 @@ class PhotoDataSourceImpl @Inject constructor(
         startTime: Long,
         endTime: Long,
     ): List<PhotoLocationEntity> {
-        return if (westLongitude <= eastLongitude) {
-            photoLocationDao.getLocationAndDateOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = eastLongitude,
-                westLongitude = westLongitude,
-                fromTime = startTime,
-                toTime = endTime
-            )
-        } else {
-            photoLocationDao.getLocationAndDateOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = eastLongitude,
-                westLongitude = 180.0,
-                fromTime = startTime,
-                toTime = endTime
-            ) + photoLocationDao.getLocationAndDateOf(
-                northLatitude = northLatitude,
-                southLatitude = southLatitude,
-                eastLongitude = -180.0,
-                westLongitude = westLongitude,
-                fromTime = startTime,
-                toTime = endTime
-            )
-        }
+        return photoLocationDao.getLocationAndDateOf(
+            northLatitude = northLatitude,
+            southLatitude = southLatitude,
+            eastLongitude = eastLongitude,
+            westLongitude = westLongitude,
+            fromTime = startTime,
+            toTime = endTime
+        )
     }
 
     fun getExifInterface(uri: Uri): ExifInterface? =

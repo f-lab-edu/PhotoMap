@@ -23,8 +23,16 @@ interface PhotoLocationDao {
     ): List<PhotoLocationEntity>
 
     @Query(
-        "SELECT * FROM photo_location_table WHERE (latitude BETWEEN :southLatitude AND :northLatitude) " +
-                "AND (longitude BETWEEN :westLongitude AND :eastLongitude)"
+        """SELECT * FROM photo_location_table 
+            WHERE (latitude BETWEEN :southLatitude AND :northLatitude)
+            AND (
+                (:westLongitude <= :eastLongitude AND longitude BETWEEN :westLongitude AND :eastLongitude)
+                OR (
+                    :westLongitude > :eastLongitude AND
+                    (longitude BETWEEN :westLongitude AND 180.0 OR longitude BETWEEN -180.0 AND :eastLongitude)
+                )
+            )
+        """
     )
     suspend fun getLocationOf(
         northLatitude: Double,
@@ -47,9 +55,16 @@ interface PhotoLocationDao {
     ): List<PhotoLocationEntity>
 
     @Query(
-        "SELECT * FROM photo_location_table WHERE (latitude BETWEEN :southLatitude AND :northLatitude) " +
-                "AND (longitude BETWEEN :eastLongitude AND :westLongitude) " +
-                "AND (generatedTime BETWEEN :fromTime AND :toTime)"
+        """SELECT * FROM photo_location_table 
+            WHERE (latitude BETWEEN :southLatitude AND :northLatitude)
+            AND (
+                (:westLongitude <= :eastLongitude AND longitude BETWEEN :westLongitude AND :eastLongitude)
+                OR (
+                    :westLongitude > :eastLongitude AND
+                    (longitude BETWEEN :westLongitude AND 180.0 OR longitude BETWEEN -180.0 AND :eastLongitude)
+                )
+            ) AND (generatedTime BETWEEN :fromTime AND :toTime)
+        """
     )
     suspend fun getLocationAndDateOf(
         northLatitude: Double,
