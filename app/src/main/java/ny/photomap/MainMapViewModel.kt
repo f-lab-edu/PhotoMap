@@ -65,7 +65,6 @@ sealed interface MainMapIntent {
     // 사진 선택
     data class SelectPhoto(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
 
-
     // 권한 주겠다
     object GoToAcceptPermission : MainMapIntent
 }
@@ -77,7 +76,12 @@ data class MainMapState(
 )
 
 sealed interface MainMapEffect {
-    data class RequestPermissions(val isFirstAppUsage: Boolean) : MainMapEffect
+    data class RequestPermissions(
+        val isFirstAppUsage: Boolean,
+        val readFilePermissionForShouldSync: Boolean,
+        val locationPermission: Boolean,
+    ) : MainMapEffect
+
     object NavigateToAppSetting : MainMapEffect
     object MoveToCurrentLocation : MainMapEffect
     data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
@@ -123,18 +127,33 @@ class MainMapViewModel @Inject constructor(
                     Timber.d("싱크 진행을 위해 권한 요청")
                     Timber.d("싱크 진행 여부 : ${it.shouldSync}, 최근 업데이트 시간 : ${it.lastSyncTime}")
                     if (it.shouldSync) {
-                        _effect.emit(MainMapEffect.RequestPermissions(it.lastSyncTime == 0L))
+                        _effect.emit(
+                            MainMapEffect.RequestPermissions(
+                                isFirstAppUsage = it.lastSyncTime == 0L,
+                                readFilePermissionForShouldSync = true,
+                                locationPermission = true
+                            )
+                        )
                     } else {
                         Timber.d("싱크 없이 진행")
-                        // todo
+                        _effect.emit(
+                            MainMapEffect.RequestPermissions(
+                                isFirstAppUsage = false,
+                                readFilePermissionForShouldSync = false,
+                                locationPermission = true
+                            )
+                        )
                     }
-
                     state
                 }, ifFailure = {
                     Timber.d("싱크 없이 진행")
-                    // todo
-                    // 룸 데이터 긇어와서 화면에 노출
-                    // getphoto
+                    _effect.emit(
+                        MainMapEffect.RequestPermissions(
+                            isFirstAppUsage = false,
+                            readFilePermissionForShouldSync = false,
+                            locationPermission = true
+                        )
+                    )
                     state
                 })
 
@@ -143,9 +162,6 @@ class MainMapViewModel @Inject constructor(
                 viewModelScope.launch(Dispatchers.Default) {
                     syncPhoto().onResponse(ifSuccess = {
                         Timber.d("싱크 완료")
-                        //getphoto하고 노출
-                        // 화면에 노출
-                        // todo
                         _effect.emit(MainMapEffect.Notice(message = R.string.sync_update_complete))
                         handleIntent(MainMapIntent.SyncFinished)
                     }, ifFailure = {
@@ -155,12 +171,10 @@ class MainMapViewModel @Inject constructor(
                         handleIntent(MainMapIntent.SyncFinished)
                     })
                 }
-
                 state.copy(loading = true)
             }
 
             MainMapIntent.SyncFinished -> state.copy(loading = false)
-
 
             is MainMapIntent.SelectPhotoLocationMarker -> state.copy(
                 cameraLocation = intent.targetPhoto.location,
@@ -179,19 +193,7 @@ class MainMapViewModel @Inject constructor(
             MainMapIntent.DenyFilePermission -> state
 
             MainMapIntent.DenyLocationPermission -> state.apply {
-                getLatestPhotoLocation().onResponse(
-                    ifSuccess = { latestData ->
-                        latestData?.let {
-                            _effect.emit(MainMapEffect.Notice(R.string.notice_move_to_latest_photo_location))
-                        } ?: run {
-                            _effect.emit(MainMapEffect.Notice(R.string.notice_deny_location_permission))
-                        }
-
-                    }, ifFailure = {
-                        it?.printStackTrace()
-                        _effect.emit(MainMapEffect.Notice(R.string.notice_deny_location_permission))
-                    }
-                )
+                _effect.emit(MainMapEffect.Notice(R.string.notice_deny_location_permission))
             }
 
             MainMapIntent.GoToAcceptPermission -> state.apply {

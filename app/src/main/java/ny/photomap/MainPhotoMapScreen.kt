@@ -1,6 +1,5 @@
 package ny.photomap
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
@@ -57,34 +56,38 @@ fun MainPhotoMapScreen(
         }) { padding ->
 
         val context = LocalContext.current
-        val permissionList =
-            locationPermissions + readImagePermissions + listOf(Manifest.permission.ACCESS_MEDIA_LOCATION)
+        var permissionList = locationPermissions + readImagePermissions
 
         val permissionState =
             rememberMultiplePermissionsState(
                 permissions = permissionList,
                 onPermissionsResult = { map ->
                     Timber.d("onPermissionsResult")
-                    val imageAccessPermission =
-                        map.getOrDefault(readImagePermissions.firstOrNull(), false)
-                    val imageVisualUserSelectedPermission = map.getOrDefault(
-                        if (readImagePermissions.size > 1) readImagePermissions.last() else null,
-                        false
-                    )
-                    val locationPermission = locationPermissions.any { map.getOrDefault(it, false) }
 
-                    if (imageAccessPermission || imageVisualUserSelectedPermission) {
-                        viewModel.handleIntent(MainMapIntent.Sync)
-                    } else {
-                        viewModel.handleIntent(MainMapIntent.DenyFilePermission)
+                    if (permissionList.containsAll(readImagePermissions)) {
+                        val imageAccessPermission =
+                            map.getOrDefault(readImagePermissions.firstOrNull(), false)
+                        val imageVisualUserSelectedPermission = map.getOrDefault(
+                            if (readImagePermissions.size > 1) readImagePermissions.last() else null,
+                            false
+                        )
+                        if (imageAccessPermission || imageVisualUserSelectedPermission) {
+                            viewModel.handleIntent(MainMapIntent.Sync)
+                        } else {
+                            viewModel.handleIntent(MainMapIntent.DenyFilePermission)
+                        }
                     }
 
-                    if (locationPermission) {
-                        viewModel.handleIntent(MainMapIntent.SearchCurrentLocation)
-                    } else {
-                        viewModel.handleIntent(MainMapIntent.DenyLocationPermission)
-                    }
+                    if (permissionList.containsAll(locationPermissions)) {
+                        val locationPermission =
+                            locationPermissions.any { map.getOrDefault(it, false) }
 
+                        if (locationPermission) {
+                            viewModel.handleIntent(MainMapIntent.SearchCurrentLocation)
+                        } else {
+                            viewModel.handleIntent(MainMapIntent.DenyLocationPermission)
+                        }
+                    }
                 }
             )
 
@@ -108,8 +111,19 @@ fun MainPhotoMapScreen(
                 Timber.d("effect: $effect")
                 when (effect) {
                     is MainMapEffect.RequestPermissions -> {
-                        isFirstAppUsage = effect.isFirstAppUsage
-                        showAskingPermissionDialog = true
+                        permissionList = when {
+                            effect.readFilePermissionForShouldSync && effect.locationPermission -> readImagePermissions + locationPermissions
+                            effect.readFilePermissionForShouldSync -> readImagePermissions
+                            effect.locationPermission -> locationPermissions
+                            else -> emptyList()
+                        }
+
+                        if (effect.readFilePermissionForShouldSync) {
+                            isFirstAppUsage = effect.isFirstAppUsage
+                            showAskingPermissionDialog = true
+                        } else {
+                            permissionState.launchMultiplePermissionRequest()
+                        }
                     }
 
                     MainMapEffect.NavigateToAppSetting -> context.startActivity(
@@ -162,6 +176,7 @@ fun MainPhotoMapScreen(
         if (showAskingPermissionDialog) {
             AskingPermissionDialog(isFirstUsage = isFirstAppUsage, onConfirm = {
                 showAskingPermissionDialog = false
+                permissionList = readImagePermissions
                 permissionState.launchMultiplePermissionRequest()
             }) {
                 showAskingPermissionDialog = false
