@@ -112,6 +112,10 @@ class MainMapViewModel @Inject constructor(
     private val _photoList = MutableStateFlow<List<PhotoLocationUIModel>>(emptyList())
     val photoList: StateFlow<List<PhotoLocationUIModel>> = _photoList
 
+    // 캐시용 todo 고도화 필요
+    private var previousBounds: LocationBoundsUIModel? = null
+    private val photoCache = mutableMapOf<LocationBoundsUIModel, List<PhotoLocationUIModel>>()
+
 
     fun handleIntent(event: MainMapIntent) {
         viewModelScope.launch {
@@ -204,23 +208,46 @@ class MainMapViewModel @Inject constructor(
                 _effect.emit(MainMapEffect.MoveToCurrentLocation)
             }
 
-            is MainMapIntent.LookAroundCurrentLocation -> {
-                val result = getPhotoLocationUseCase(
-                    northLatitude = intent.locationBounds.northLatitude,
-                    southLatitude = intent.locationBounds.southLatitude,
-                    eastLongitude = intent.locationBounds.eastLongitude,
-                    westLongitude = intent.locationBounds.westLongitude
-                )
+            is MainMapIntent.LookAroundCurrentLocation -> state.apply {
 
-                Timber.d("사진 조회 범위- ${intent.locationBounds}")
-                Timber.d("result size : ${result.getOrNull()?.size}")
+                val shouldNotLoad = (previousBounds != null &&
+                        (previousBounds!!.northLatitude >= intent.locationBounds.northLatitude &&
+                                previousBounds!!.southLatitude <= intent.locationBounds.southLatitude &&
+                                previousBounds!!.westLongitude <= intent.locationBounds.westLongitude &&
+                                previousBounds!!.eastLongitude >= intent.locationBounds.eastLongitude)
+                        )
 
-                val list = result.getOrNull()?.map(PhotoLocationModel::toPhotoLocationUiModel)
-                    ?: emptyList<PhotoLocationUIModel>()
+                if (shouldNotLoad) return@apply
 
-                _photoList.value = list
+                val cacheBounds = photoCache.keys.find { bounds ->
+                    bounds.northLatitude >= intent.locationBounds.northLatitude &&
+                            bounds.southLatitude <= intent.locationBounds.southLatitude &&
+                            bounds.westLongitude <= intent.locationBounds.westLongitude &&
+                            bounds.eastLongitude >= intent.locationBounds.eastLongitude
+                }
 
-                state
+                if (cacheBounds != null) {
+                    _photoList.value = photoCache[cacheBounds]!!
+                    previousBounds = intent.locationBounds
+                } else {
+                    val result = getPhotoLocationUseCase(
+                        northLatitude = intent.locationBounds.northLatitude,
+                        southLatitude = intent.locationBounds.southLatitude,
+                        eastLongitude = intent.locationBounds.eastLongitude,
+                        westLongitude = intent.locationBounds.westLongitude
+                    )
+
+                    Timber.d("사진 조회 범위- ${intent.locationBounds}")
+                    Timber.d("result size : ${result.getOrNull()?.size}")
+
+                    val list =
+                        result.getOrNull()?.map(PhotoLocationModel::toPhotoLocationUiModel)
+                            ?: emptyList<PhotoLocationUIModel>()
+
+                    _photoList.value = list
+                    photoCache[intent.locationBounds] = list
+                    previousBounds = intent.locationBounds
+                }
             }
         }
     }
