@@ -9,7 +9,7 @@ data class PhotoLocationUIModel(
     val name: String?,
     val location: LocationUIModel,
     val time: TimeUIModel,
-    val thumbnail: ByteArray,
+//    val thumbnail: ByteArray,
     val uri: Uri,
 ) : ClusterItem {
     override fun getPosition(): LatLng = LatLng(location.latitude, location.longitude)
@@ -27,6 +27,6 @@ fun PhotoLocationModel.toPhotoLocationUiModel(): PhotoLocationUIModel = PhotoLoc
     name = name,
     location = LocationUIModel(latitude = latitude, longitude = longitude),
     time = TimeUIModel(takenTime = this.generatedTimeMillis, addedTime = addedTimeMillis),
-    thumbnail = this.thumbNail,
+//    thumbnail = this.thumbNail,
     uri = Uri.parse(this.uri)
 )

@@ -3,10 +3,8 @@ package ny.photomap.data.datasource
 import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.Cursor
-import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Size
 import androidx.core.database.getStringOrNull
 import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
@@ -20,7 +18,6 @@ import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
 import ny.photomap.domain.TimeStamp
-import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -86,15 +83,11 @@ class PhotoDataSourceImpl @Inject constructor(
                 val addedTime: Long? = cursor.getLong(addedTimeColumn)
                 val takenTime: Long? = cursor.getLong(takenTimeColumn)
 
-                val thumbnail = contentResolver.loadThumbnail(uri, Size(150, 150), null)
-
-
                 createPhotoLocationData(
                     uri = uri,
                     name = name,
                     addedTime = addedTime,
                     takenTime = takenTime,
-                    thumbnail = thumbnail
                 )?.let { data ->
                     list.add(data)
                 }
@@ -108,7 +101,6 @@ class PhotoDataSourceImpl @Inject constructor(
         name: String?,
         addedTime: Long?,
         takenTime: Long?,
-        thumbnail: Bitmap,
     ): PhotoLocationData? {
         return getExifInterface(uri)?.let {
             val generatedTime =
@@ -128,18 +120,11 @@ class PhotoDataSourceImpl @Inject constructor(
                     longitude = longitude,
                     generatedTime = generatedTime,
                     addedTime = addedTime,
-                    thumbNail = convertBitmapToBiteArray(thumbnail)
                 )
             } else null
         }
     }
 
-    fun convertBitmapToBiteArray(bitmap: Bitmap): ByteArray {
-        return ByteArrayOutputStream().use {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
-            it.toByteArray()
-        }
-    }
 
     fun getTimestampWithOffset(timeString: String?, offsetTimeString: String?): Long? {
         return if (timeString != null && offsetTimeString != null) {

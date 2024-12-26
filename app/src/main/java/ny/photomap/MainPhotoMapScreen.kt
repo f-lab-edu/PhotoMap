@@ -32,8 +32,10 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
@@ -63,7 +65,6 @@ fun MainPhotoMapScreen(
                 permissions = permissionList,
                 onPermissionsResult = { map ->
                     Timber.d("onPermissionsResult")
-
                     if (permissionList.containsAll(readImagePermissions)) {
                         val imageAccessPermission =
                             map.getOrDefault(readImagePermissions.firstOrNull(), false)
@@ -88,6 +89,7 @@ fun MainPhotoMapScreen(
                             viewModel.handleIntent(MainMapIntent.DenyLocationPermission)
                         }
                     }
+
                 }
             )
 
@@ -107,70 +109,79 @@ fun MainPhotoMapScreen(
         }
 
         LaunchedEffect(Unit) {
-            viewModel.effect.collectLatest { effect ->
-                Timber.d("effect: $effect")
-                when (effect) {
-                    is MainMapEffect.RequestPermissions -> {
-                        permissionList = when {
-                            effect.readFilePermissionForShouldSync && effect.locationPermission -> readImagePermissions + locationPermissions
-                            effect.readFilePermissionForShouldSync -> readImagePermissions
-                            effect.locationPermission -> locationPermissions
-                            else -> emptyList()
+            withContext(Dispatchers.Default) {
+                viewModel.effect.collectLatest { effect ->
+                    Timber.d("effect: $effect")
+                    when (effect) {
+                        is MainMapEffect.RequestPermissions -> {
+                            permissionList = when {
+                                effect.readFilePermissionForShouldSync && effect.locationPermission -> readImagePermissions + locationPermissions
+                                effect.readFilePermissionForShouldSync -> readImagePermissions
+                                effect.locationPermission -> locationPermissions
+                                else -> emptyList()
+                            }
+
+                            withContext(Dispatchers.Main) {
+                                if (effect.readFilePermissionForShouldSync) {
+                                    isFirstAppUsage = effect.isFirstAppUsage
+                                    showAskingPermissionDialog = true
+                                } else {
+                                    permissionState.launchMultiplePermissionRequest()
+                                }
+                            }
                         }
 
-                        if (effect.readFilePermissionForShouldSync) {
-                            isFirstAppUsage = effect.isFirstAppUsage
-                            showAskingPermissionDialog = true
-                        } else {
-                            permissionState.launchMultiplePermissionRequest()
+                        MainMapEffect.NavigateToAppSetting -> withContext(Dispatchers.Main) {
+                            context.startActivity(
+                                Intent(
+                                    ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    Uri.parse("package:${BuildConfig.APPLICATION_ID}")
+                                )
+                            )
                         }
+
+                        is MainMapEffect.NavigateToDetailLocationMap -> {
+
+                        }
+
+                        is MainMapEffect.NavigateToPhoto -> {
+
+                        }
+
+                        is MainMapEffect.Notice -> withContext(Dispatchers.Main) {
+                            snackBarHostState.showSnackbar(message = context.getString(effect.message))
+                        }
+
+                        is MainMapEffect.Error -> withContext(Dispatchers.Main) {
+                            snackBarHostState.showSnackbar(message = context.getString(effect.message))
+                        }
+
+
+                        MainMapEffect.MoveToCurrentLocation,
+                            -> try {
+                            @SuppressLint("MissingPermission")
+                            val location = fusedLocationClient.lastLocation.await()
+                            Timber.d("location : $location")
+                            withContext(Dispatchers.Main) {
+                                cameraPositionState.animate(
+                                    update = CameraUpdateFactory.newLatLngZoom(
+                                        LatLng(
+                                            location.latitude,
+                                            location.longitude
+                                        ), 15.0f
+                                    ), durationMs = 1500
+                                )
+                            }
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Timber.d("위치 조회 에러 : $e")
+                        }
+
                     }
-
-                    MainMapEffect.NavigateToAppSetting -> context.startActivity(
-                        Intent(
-                            ACTION_APPLICATION_DETAILS_SETTINGS,
-                            Uri.parse("package:${BuildConfig.APPLICATION_ID}")
-                        )
-                    )
-
-                    is MainMapEffect.NavigateToDetailLocationMap -> {
-
-                    }
-
-                    is MainMapEffect.NavigateToPhoto -> {
-
-                    }
-
-                    is MainMapEffect.Notice -> {
-                        snackBarHostState.showSnackbar(message = context.getString(effect.message))
-                    }
-
-                    is MainMapEffect.Error -> {
-                        snackBarHostState.showSnackbar(message = context.getString(effect.message))
-                    }
-
-
-                    MainMapEffect.MoveToCurrentLocation,
-                        -> try {
-                        @SuppressLint("MissingPermission")
-                        val location = fusedLocationClient.lastLocation.await()
-                        Timber.d("location : $location")
-                        cameraPositionState.animate(
-                            update = CameraUpdateFactory.newLatLngZoom(
-                                LatLng(
-                                    location.latitude,
-                                    location.longitude
-                                ), 15.0f
-                            ), durationMs = 1500
-                        )
-
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Timber.d("위치 조회 에러 : $e")
-                    }
-
                 }
             }
+
         }
 
         if (showAskingPermissionDialog) {
@@ -184,11 +195,7 @@ fun MainPhotoMapScreen(
         }
 
         LaunchedEffect(cameraPositionState.isMoving) {
-            if (cameraPositionState.isMoving) {
-                // 카메라 움직임 시작
-                Timber.d("카메라 이동 : ${cameraPositionState.cameraMoveStartedReason.name}, 시작 지점 : ${cameraPositionState.position.target}")
-
-            } else {
+            if (!cameraPositionState.isMoving) {
                 // 카메라 움직임 끝
                 Timber.d("카메라 이동 완료. 중심 : ${cameraPositionState.position.target}")
                 cameraPositionState.projection?.visibleRegion?.latLngBounds?.let { latLngBounds ->
@@ -206,9 +213,9 @@ fun MainPhotoMapScreen(
                         )
                     )
                 }
-
             }
         }
+
 
         Column(
             modifier = Modifier

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.domain.onFailure
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
 import ny.photomap.domain.usecase.GetLatestPhotoLocationUseCase
@@ -118,7 +119,7 @@ class MainMapViewModel @Inject constructor(
 
 
     fun handleIntent(event: MainMapIntent) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             intent.send(event)
         }
     }
@@ -219,7 +220,7 @@ class MainMapViewModel @Inject constructor(
 
                 if (shouldNotLoad) return@apply
 
-                val cacheBounds = photoCache.keys.find { bounds ->
+                val cacheBounds : LocationBoundsUIModel? = photoCache.keys.find { bounds ->
                     bounds.northLatitude >= intent.locationBounds.northLatitude &&
                             bounds.southLatitude <= intent.locationBounds.southLatitude &&
                             bounds.westLongitude <= intent.locationBounds.westLongitude &&
@@ -243,6 +244,12 @@ class MainMapViewModel @Inject constructor(
                     val list =
                         result.getOrNull()?.map(PhotoLocationModel::toPhotoLocationUiModel)
                             ?: emptyList<PhotoLocationUIModel>()
+
+                    if(list.isEmpty()) {
+                        result.onFailure {
+                            it?.printStackTrace()
+                        }
+                    }
 
                     _photoList.value = list
                     photoCache[intent.locationBounds] = list
