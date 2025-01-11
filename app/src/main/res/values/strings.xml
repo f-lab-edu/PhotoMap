@@ -14,6 +14,7 @@
     <string name="button_request_location_permission_with_denied">현재 위치를 알기 위해서는 권한이 필요해요</string>
     <string name="sync_update_complete">최신 사진 업데이트를 성공했습니다.</string>
     <string name="sync_update_fail">최신 사진 업데이트를 실패했습니다.</string>
+    <string name="load_photo_list_fail">사진 로드에 실패했습니다.</string>
     <string name="success">성공</string>
     <string name="failure">실패</string>
     <string name="notice_move_to_latest_photo_location">가장 최근 사진의 위치로 이동합니다.</string>

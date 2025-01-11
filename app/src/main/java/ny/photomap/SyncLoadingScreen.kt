@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import ny.photomap.ui.theme.PhotoMapTheme
 
 @Composable
@@ -40,7 +41,7 @@ fun SyncLoadingScreen() {
 
         LaunchedEffect(Unit) {
             val lastIndex = loadingTexts.lastIndex
-            while (true) {
+            while (isActive) {
                 delay(4000)
                 if (index + 1 > lastIndex) {
                     index = 0

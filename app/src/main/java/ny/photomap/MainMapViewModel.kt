@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ny.photomap.domain.model.PhotoLocationModel
-import ny.photomap.domain.onFailure
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
 import ny.photomap.domain.usecase.GetLatestPhotoLocationUseCase
@@ -42,8 +41,8 @@ sealed interface MainMapIntent {
     // 싱크 종료
     object SyncFinished : MainMapIntent
 
-    // 파일 권한 거부
-    object DenyFilePermission : MainMapIntent
+    // 화면 뷰 상태 초기화. 파일 권한 거부시 사용
+    object ResetViewState : MainMapIntent
 
     // 위치 권한 거부
     object DenyLocationPermission : MainMapIntent
@@ -74,14 +73,13 @@ data class MainMapState(
     val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0),
     val targetPhoto: PhotoLocationUIModel? = null,
     val loading: Boolean = false,
+//    val permissionList: List<String>? = null,
+    val showPermissionDialog: Boolean = false,
+    val isFirstAppUsage: Boolean = false,
 )
 
 sealed interface MainMapEffect {
-    data class RequestPermissions(
-        val isFirstAppUsage: Boolean,
-        val readFilePermissionForShouldSync: Boolean,
-        val locationPermission: Boolean,
-    ) : MainMapEffect
+    object RequestLocationPermissions : MainMapEffect
 
     object NavigateToAppSetting : MainMapEffect
     object MoveToCurrentLocation : MainMapEffect
@@ -127,55 +125,11 @@ class MainMapViewModel @Inject constructor(
     private suspend fun reducer(state: MainMapState, intent: MainMapIntent): MainMapState {
         Timber.d("state: $state\nintent: $intent")
         return when (intent) {
-            MainMapIntent.CheckSyncTime -> checkSyncState()
-                .onResponse(ifSuccess = {
-                    Timber.d("싱크 진행을 위해 권한 요청")
-                    Timber.d("싱크 진행 여부 : ${it.shouldSync}, 최근 업데이트 시간 : ${it.lastSyncTime}")
-                    if (it.shouldSync) {
-                        _effect.emit(
-                            MainMapEffect.RequestPermissions(
-                                isFirstAppUsage = it.lastSyncTime == 0L,
-                                readFilePermissionForShouldSync = true,
-                                locationPermission = true
-                            )
-                        )
-                    } else {
-                        Timber.d("싱크 없이 진행")
-                        _effect.emit(
-                            MainMapEffect.RequestPermissions(
-                                isFirstAppUsage = false,
-                                readFilePermissionForShouldSync = false,
-                                locationPermission = true
-                            )
-                        )
-                    }
-                    state
-                }, ifFailure = {
-                    Timber.d("싱크 없이 진행")
-                    _effect.emit(
-                        MainMapEffect.RequestPermissions(
-                            isFirstAppUsage = false,
-                            readFilePermissionForShouldSync = false,
-                            locationPermission = true
-                        )
-                    )
-                    state
-                })
+            MainMapIntent.CheckSyncTime -> checkSyncStateAndRequestPermission(state)
 
             MainMapIntent.Sync -> {
                 // todo 작업 중 노티피케이션
-                viewModelScope.launch(Dispatchers.Default) {
-                    syncPhoto().onResponse(ifSuccess = {
-                        Timber.d("싱크 완료")
-                        _effect.emit(MainMapEffect.Notice(message = R.string.sync_update_complete))
-                        handleIntent(MainMapIntent.SyncFinished)
-                    }, ifFailure = {
-                        it?.printStackTrace()
-                        Timber.d("싱크 실패")
-                        _effect.emit(MainMapEffect.Error(message = R.string.sync_update_fail))
-                        handleIntent(MainMapIntent.SyncFinished)
-                    })
-                }
+                sync()
                 state.copy(loading = true)
             }
 
@@ -195,7 +149,7 @@ class MainMapViewModel @Inject constructor(
                 _effect.emit(MainMapEffect.NavigateToPhoto(targetPhoto = intent.targetPhoto))
             }
 
-            MainMapIntent.DenyFilePermission -> state
+            MainMapIntent.ResetViewState -> MainMapState()
 
             MainMapIntent.DenyLocationPermission -> state.apply {
                 _effect.emit(MainMapEffect.Notice(R.string.notice_deny_location_permission))
@@ -210,52 +164,94 @@ class MainMapViewModel @Inject constructor(
             }
 
             is MainMapIntent.LookAroundCurrentLocation -> state.apply {
-
-                val shouldNotLoad = (previousBounds != null &&
-                        (previousBounds!!.northLatitude >= intent.locationBounds.northLatitude &&
-                                previousBounds!!.southLatitude <= intent.locationBounds.southLatitude &&
-                                previousBounds!!.westLongitude <= intent.locationBounds.westLongitude &&
-                                previousBounds!!.eastLongitude >= intent.locationBounds.eastLongitude)
-                        )
-
-                if (shouldNotLoad) return@apply
-
-                val cacheBounds : LocationBoundsUIModel? = photoCache.keys.find { bounds ->
-                    bounds.northLatitude >= intent.locationBounds.northLatitude &&
-                            bounds.southLatitude <= intent.locationBounds.southLatitude &&
-                            bounds.westLongitude <= intent.locationBounds.westLongitude &&
-                            bounds.eastLongitude >= intent.locationBounds.eastLongitude
-                }
-
-                if (cacheBounds != null) {
-                    _photoList.value = photoCache[cacheBounds]!!
-                    previousBounds = intent.locationBounds
-                } else {
-                    val result = getPhotoLocationUseCase(
-                        northLatitude = intent.locationBounds.northLatitude,
-                        southLatitude = intent.locationBounds.southLatitude,
-                        eastLongitude = intent.locationBounds.eastLongitude,
-                        westLongitude = intent.locationBounds.westLongitude
-                    )
-
-                    Timber.d("사진 조회 범위- ${intent.locationBounds}")
-                    Timber.d("result size : ${result.getOrNull()?.size}")
-
-                    val list =
-                        result.getOrNull()?.map(PhotoLocationModel::toPhotoLocationUiModel)
-                            ?: emptyList<PhotoLocationUIModel>()
-
-                    if(list.isEmpty()) {
-                        result.onFailure {
-                            it?.printStackTrace()
-                        }
-                    }
-
-                    _photoList.value = list
-                    photoCache[intent.locationBounds] = list
-                    previousBounds = intent.locationBounds
-                }
+                getPhotoListByLocationBounds(intent.locationBounds)
             }
+        }
+    }
+
+    private suspend fun checkSyncStateAndRequestPermission(state: MainMapState): MainMapState {
+        return checkSyncState()
+            .onResponse(ifSuccess = {
+                Timber.d("싱크 진행을 위해 권한 요청")
+                Timber.d("싱크 진행 여부 : ${it.shouldSync}, 최근 업데이트 시간 : ${it.lastSyncTime}")
+                if (it.shouldSync) {
+                    state.copy(
+                        showPermissionDialog = true,
+                        isFirstAppUsage = it.lastSyncTime == 0L,
+                    )
+                } else {
+                    Timber.d("싱크 없이 진행")
+                    _effect.emit(
+                        MainMapEffect.RequestLocationPermissions
+                    )
+                    state
+                }
+            }, ifFailure = {
+                Timber.d("싱크 없이 진행")
+                _effect.emit(
+                    MainMapEffect.RequestLocationPermissions
+                )
+                state
+            })
+    }
+
+    private fun sync() {
+        viewModelScope.launch(Dispatchers.Default) {
+            syncPhoto().onResponse(ifSuccess = {
+                Timber.d("싱크 완료")
+                _effect.emit(MainMapEffect.Notice(message = R.string.sync_update_complete))
+                handleIntent(MainMapIntent.SyncFinished)
+            }, ifFailure = {
+                it?.printStackTrace()
+                Timber.d("싱크 실패")
+                _effect.emit(MainMapEffect.Error(message = R.string.sync_update_fail))
+                handleIntent(MainMapIntent.SyncFinished)
+            })
+        }
+    }
+
+    private suspend fun getPhotoListByLocationBounds(locationBounds: LocationBoundsUIModel) {
+        val shouldNotLoad = (previousBounds != null &&
+                (previousBounds!!.northLatitude >= locationBounds.northLatitude &&
+                        previousBounds!!.southLatitude <= locationBounds.southLatitude &&
+                        previousBounds!!.westLongitude <= locationBounds.westLongitude &&
+                        previousBounds!!.eastLongitude >= locationBounds.eastLongitude)
+                )
+
+        if (shouldNotLoad) return
+
+        val cacheBounds: LocationBoundsUIModel? = photoCache.keys.find { bounds ->
+            bounds.northLatitude >= locationBounds.northLatitude &&
+                    bounds.southLatitude <= locationBounds.southLatitude &&
+                    bounds.westLongitude <= locationBounds.westLongitude &&
+                    bounds.eastLongitude >= locationBounds.eastLongitude
+        }
+
+        if (cacheBounds != null) {
+            _photoList.value = photoCache[cacheBounds]!!
+            previousBounds = locationBounds
+        } else {
+            val list = getPhotoLocationUseCase(
+                northLatitude = locationBounds.northLatitude,
+                southLatitude = locationBounds.southLatitude,
+                eastLongitude = locationBounds.eastLongitude,
+                westLongitude = locationBounds.westLongitude
+            ).onResponse(ifSuccess = {
+                it.map(PhotoLocationModel::toPhotoLocationUiModel)
+            }, ifFailure = {
+                it?.printStackTrace()
+                Timber.d("싱크 실패")
+                _effect.emit(MainMapEffect.Error(message = R.string.load_photo_list_fail))
+                emptyList<PhotoLocationUIModel>()
+            })
+
+            Timber.d("사진 조회 범위- $locationBounds")
+            Timber.d("result size : ${list.size}")
+
+
+            _photoList.value = list
+            photoCache[locationBounds] = list
+            previousBounds = locationBounds
         }
     }
 

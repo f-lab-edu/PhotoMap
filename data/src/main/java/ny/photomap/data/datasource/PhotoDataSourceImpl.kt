@@ -109,10 +109,10 @@ class PhotoDataSourceImpl @Inject constructor(
                     it.getAttribute(TAG_OFFSET_TIME_ORIGINAL)
                 ) ?: takenTime
 
-
-            if (generatedTime != null && addedTime != null && it.latLong != null) {
-                val latitude = it.latLong!![0]
-                val longitude = it.latLong!![1]
+            val latLong = it.latLong
+            if (generatedTime != null && addedTime != null && latLong != null && latLong.size == 2) {
+                val latitude = latLong[0]
+                val longitude = latLong[1]
                 PhotoLocationData(
                     uri = uri,
                     name = name,

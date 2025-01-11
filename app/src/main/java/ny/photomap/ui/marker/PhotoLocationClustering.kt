@@ -35,11 +35,13 @@ fun PhotoLocationClustering(items: List<PhotoLocationUIModel>) {
     )
     val renderer = rememberClusterRenderer(
         clusterContent = { cluster ->
-            PhotoLocationMarker(
-                modifier = Modifier.size(dimensionResource(R.dimen.size_thumbnail)),
-                text = "${cluster.size}",
-                model = cluster.items.last()
-            )
+            if (!cluster.items.isNullOrEmpty()) {
+                PhotoLocationMarker(
+                    modifier = Modifier.size(dimensionResource(R.dimen.size_thumbnail)),
+                    text = "${cluster.size}",
+                    model = cluster.getItems().last()
+                )
+            }
         },
         clusterItemContent = { item ->
             PhotoLocationMarker(

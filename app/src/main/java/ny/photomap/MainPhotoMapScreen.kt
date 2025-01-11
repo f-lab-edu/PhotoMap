@@ -14,9 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +56,9 @@ fun MainPhotoMapScreen(
         }) { padding ->
 
         val context = LocalContext.current
-        var permissionList = locationPermissions + readImagePermissions
+        val state by viewModel.state.collectAsStateWithLifecycle()
+
+        var permissionList = getPermissionList(needReadFilePermission = true, needLocationPermission = true)
 
         val permissionState =
             rememberMultiplePermissionsState(
@@ -75,7 +75,7 @@ fun MainPhotoMapScreen(
                         if (imageAccessPermission || imageVisualUserSelectedPermission) {
                             viewModel.handleIntent(MainMapIntent.Sync)
                         } else {
-                            viewModel.handleIntent(MainMapIntent.DenyFilePermission)
+                            viewModel.handleIntent(MainMapIntent.ResetViewState)
                         }
                     }
 
@@ -93,7 +93,7 @@ fun MainPhotoMapScreen(
                 }
             )
 
-        val state by viewModel.state.collectAsStateWithLifecycle()
+
         val photoList by viewModel.photoList.collectAsStateWithLifecycle()
 
         val cameraPositionState = rememberCameraPositionState()
@@ -101,8 +101,6 @@ fun MainPhotoMapScreen(
         val fusedLocationClient =
             remember { LocationServices.getFusedLocationProviderClient(context) }
 
-        var showAskingPermissionDialog by remember { mutableStateOf(false) }
-        var isFirstAppUsage by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             viewModel.handleIntent(MainMapIntent.CheckSyncTime)
@@ -113,23 +111,14 @@ fun MainPhotoMapScreen(
                 viewModel.effect.collectLatest { effect ->
                     Timber.d("effect: $effect")
                     when (effect) {
-                        is MainMapEffect.RequestPermissions -> {
-                            permissionList = when {
-                                effect.readFilePermissionForShouldSync && effect.locationPermission -> readImagePermissions + locationPermissions
-                                effect.readFilePermissionForShouldSync -> readImagePermissions
-                                effect.locationPermission -> locationPermissions
-                                else -> emptyList()
-                            }
-
-                            withContext(Dispatchers.Main) {
-                                if (effect.readFilePermissionForShouldSync) {
-                                    isFirstAppUsage = effect.isFirstAppUsage
-                                    showAskingPermissionDialog = true
-                                } else {
-                                    permissionState.launchMultiplePermissionRequest()
-                                }
-                            }
+                        is MainMapEffect.RequestLocationPermissions -> {
+                            permissionList = getPermissionList(
+                                needLocationPermission = true,
+                                needReadFilePermission = false
+                            )
+                            permissionState.launchMultiplePermissionRequest()
                         }
+
 
                         MainMapEffect.NavigateToAppSetting -> withContext(Dispatchers.Main) {
                             context.startActivity(
@@ -181,16 +170,18 @@ fun MainPhotoMapScreen(
                     }
                 }
             }
-
         }
 
-        if (showAskingPermissionDialog) {
-            AskingPermissionDialog(isFirstUsage = isFirstAppUsage, onConfirm = {
-                showAskingPermissionDialog = false
-                permissionList = readImagePermissions
+        if (state.showPermissionDialog) {
+            AskingPermissionDialog(isFirstUsage = state.isFirstAppUsage, onConfirm = {
+                viewModel.handleIntent(MainMapIntent.ResetViewState)
+                permissionList = getPermissionList(
+                    needReadFilePermission = true,
+                    needLocationPermission = false
+                )
                 permissionState.launchMultiplePermissionRequest()
             }) {
-                showAskingPermissionDialog = false
+                viewModel.handleIntent(MainMapIntent.ResetViewState)
             }
         }
 
@@ -270,3 +261,14 @@ fun MainPhotoMapScreen(
 
     }
 }
+
+fun getPermissionList(
+    needReadFilePermission: Boolean = true,
+    needLocationPermission: Boolean = true,
+): List<String> =
+    when {
+        needReadFilePermission && needLocationPermission -> readImagePermissions + locationPermissions
+        needReadFilePermission -> readImagePermissions
+        needLocationPermission -> locationPermissions
+        else -> emptyList()
+    }

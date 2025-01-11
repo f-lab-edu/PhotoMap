@@ -46,7 +46,7 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         dataSource.deleteAllPhotoLocation()
     }
 
-    override suspend fun getPhotoLocation(
+    suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
@@ -59,7 +59,7 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-    override suspend fun getPhotoLocation(
+    suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
@@ -75,6 +75,26 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
     }
 
     override suspend fun getPhotoLocation(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        startTime: Long?,
+        endTime: Long?,
+    ): Result<List<PhotoLocationModel>> {
+        return if (startTime != null && endTime != null) {
+            getPhotoLocation(
+                latitude = latitude, longitude = longitude,
+                range = range, startTime = startTime, endTime = endTime
+            )
+        } else {
+            getPhotoLocation(
+                latitude = latitude, longitude = longitude,
+                range = range
+            )
+        }
+    }
+
+    suspend fun getPhotoLocation(
         northLatitude: Double,
         southLatitude: Double,
         eastLongitude: Double,
@@ -88,7 +108,7 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-    override suspend fun getPhotoLocation(
+    suspend fun getPhotoLocation(
         northLatitude: Double,
         southLatitude: Double,
         eastLongitude: Double,
@@ -103,6 +123,29 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
                 startTime = startTime, endTime = endTime
             ).map(PhotoLocationEntity::toModel)
         }
+    }
+
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long?,
+        endTime: Long?,
+    ): Result<List<PhotoLocationModel>> {
+        return if (startTime != null && endTime != null) {
+            getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+                startTime = startTime, endTime = endTime
+            )
+        } else {
+            getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+            )
+        }
+
     }
 
     override suspend fun initializePhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {

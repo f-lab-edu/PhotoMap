@@ -18,7 +18,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import ny.photomap.ui.theme.PhotoMapTheme
 
-
+sealed class SnackbarType {
+    object Success : SnackbarType()
+    object Failure : SnackbarType()
+    object Default : SnackbarType()
+}
 
 @Composable
 fun SuccessFailureSnackbar(
@@ -26,18 +30,18 @@ fun SuccessFailureSnackbar(
     modifier: Modifier = Modifier,
 ) {
 
-    val isSuccessNotice =
-        if (data.visuals.message.contains(stringResource(R.string.success))) true
-        else if (data.visuals.message.contains(stringResource(R.string.failure))) false
-        else null
+    val snackbarType =
+        if (data.visuals.message.contains(stringResource(R.string.success))) SnackbarType.Success
+        else if (data.visuals.message.contains(stringResource(R.string.failure))) SnackbarType.Failure
+        else SnackbarType.Default
 
-    val (contentColor, containerColor, actionColor, actionContentColor) = when (isSuccessNotice) {
-        true -> listOf<Color>(
+    val (contentColor, containerColor, actionColor, actionContentColor) = when (snackbarType) {
+        SnackbarType.Success -> listOf<Color>(
             MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.primaryContainer,
             MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.primaryContainer
         )
 
-        false -> listOf<Color>(
+        SnackbarType.Failure -> listOf<Color>(
             MaterialTheme.colorScheme.error, MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.errorContainer
         )
