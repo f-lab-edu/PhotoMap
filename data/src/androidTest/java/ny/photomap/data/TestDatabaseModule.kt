@@ -7,12 +7,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
 import ny.photomap.data.db.PhotoLocationDatabase
-import ny.photomap.data.di.DatabaseModule
+import ny.photomap.data.di.ProvideSingletonModule
 
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [DatabaseModule::class]
+    replaces = [ProvideSingletonModule::class]
 )
 class TestDatabaseModule {
     @Provides

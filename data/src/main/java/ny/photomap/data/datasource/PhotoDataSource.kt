@@ -9,9 +9,9 @@ interface PhotoDataSource {
 
     suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData>
 
-    suspend fun saveLatestFetchTime(fetchTime: Long)
+    suspend fun saveLatestUpdateTime()
 
-    suspend fun getLatestFetchTime(): Long
+    suspend fun getLatestUpdateTime(): Long
 
     suspend fun saveAllPhotoLocation(list: List<PhotoLocationEntity>)
 
@@ -30,6 +30,27 @@ interface PhotoDataSource {
         startTime: Long,
         endTime: Long,
     ): List<PhotoLocationEntity>
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): List<PhotoLocationEntity>
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): List<PhotoLocationEntity>
+
+
+    suspend fun initializePhotoLocation(list: List<PhotoLocationEntity>)
+
+    suspend fun getLatestPhotoLocation() : PhotoLocationEntity?
 
     // todo 추후 기능 추가
     /*    suspend fun getPhotoLocationWithOffset(

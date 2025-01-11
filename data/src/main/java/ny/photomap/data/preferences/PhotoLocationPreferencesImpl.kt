@@ -6,8 +6,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-class PhotoLocationPreferencesImpl(private val dataStore: DataStore<Preferences>) :
+class PhotoLocationPreferencesImpl @Inject constructor(private val dataStore: DataStore<Preferences>) :
     PhotoLocationReferences {
 
     private val keyTimeSyncDatabase = longPreferencesKey(PREFERENCES_KEY_TIME_SYNC_DATABASE)

@@ -25,14 +25,13 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-    override suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit> = runResultCatching {
-        dataSource.saveLatestFetchTime(fetchTime)
-
+    override suspend fun saveLatestUpdateTime(): Result<Unit> = runResultCatching {
+        dataSource.saveLatestUpdateTime()
     }
 
 
-    override suspend fun getLatestFetchTime(): Result<Long> = runResultCatching {
-        dataSource.getLatestFetchTime()
+    override suspend fun getLatestUpdateTime(): Result<Long> = runResultCatching {
+        dataSource.getLatestUpdateTime()
     }
 
     override suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
@@ -47,7 +46,7 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         dataSource.deleteAllPhotoLocation()
     }
 
-    override suspend fun getPhotoLocation(
+    suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
@@ -60,7 +59,7 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-    override suspend fun getPhotoLocation(
+    suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
@@ -75,7 +74,93 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
         }
     }
 
-// todo 추후 작업
+    override suspend fun getPhotoLocation(
+        latitude: Double,
+        longitude: Double,
+        range: Double,
+        startTime: Long?,
+        endTime: Long?,
+    ): Result<List<PhotoLocationModel>> {
+        return if (startTime != null && endTime != null) {
+            getPhotoLocation(
+                latitude = latitude, longitude = longitude,
+                range = range, startTime = startTime, endTime = endTime
+            )
+        } else {
+            getPhotoLocation(
+                latitude = latitude, longitude = longitude,
+                range = range
+            )
+        }
+    }
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+    ): Result<List<PhotoLocationModel>> {
+        return runResultCatching {
+            dataSource.getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+            ).map(PhotoLocationEntity::toModel)
+        }
+    }
+
+    suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long,
+        endTime: Long,
+    ): Result<List<PhotoLocationModel>> {
+        return runResultCatching {
+            dataSource.getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+                startTime = startTime, endTime = endTime
+            ).map(PhotoLocationEntity::toModel)
+        }
+    }
+
+    override suspend fun getPhotoLocation(
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long?,
+        endTime: Long?,
+    ): Result<List<PhotoLocationModel>> {
+        return if (startTime != null && endTime != null) {
+            getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+                startTime = startTime, endTime = endTime
+            )
+        } else {
+            getPhotoLocation(
+                northLatitude = northLatitude, southLatitude = southLatitude,
+                eastLongitude = eastLongitude, westLongitude = westLongitude,
+            )
+        }
+
+    }
+
+    override suspend fun initializePhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
+        return runResultCatching {
+            dataSource.initializePhotoLocation(list.map(PhotoLocationModel::toEntity))
+        }
+    }
+
+    override suspend fun getLatestPhotoLocation(): Result<PhotoLocationModel?> {
+        return runResultCatching {
+            dataSource.getLatestPhotoLocation()?.toModel()
+        }
+    }
+
+    // todo 추후 작업
     /*override suspend fun getPhotoLocationWithOffset(
         latitude: Double,
         longitude: Double,

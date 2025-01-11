@@ -8,9 +8,9 @@ interface PhotoRepository {
 
     suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationModel>>
 
-    suspend fun saveLatestFetchTime(fetchTime: Long): Result<Unit>
+    suspend fun saveLatestUpdateTime(): Result<Unit>
 
-    suspend fun getLatestFetchTime(): Result<Long>
+    suspend fun getLatestUpdateTime(): Result<Long>
 
     suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
 
@@ -20,15 +20,22 @@ interface PhotoRepository {
         latitude: Double,
         longitude: Double,
         range: Double,
+        startTime: Long? = null,
+        endTime: Long? = null,
     ): Result<List<PhotoLocationModel>>
 
     suspend fun getPhotoLocation(
-        latitude: Double,
-        longitude: Double,
-        range: Double,
-        startTime: Long,
-        endTime: Long,
+        northLatitude: Double,
+        southLatitude: Double,
+        eastLongitude: Double,
+        westLongitude: Double,
+        startTime: Long? = null,
+        endTime: Long? = null,
     ): Result<List<PhotoLocationModel>>
+
+    suspend fun initializePhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
+
+    suspend fun getLatestPhotoLocation() : Result<PhotoLocationModel?>
 
     // todo 추후 작업
     /*suspend fun getPhotoLocationWithOffset(

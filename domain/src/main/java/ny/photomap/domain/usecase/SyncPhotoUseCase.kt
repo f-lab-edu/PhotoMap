@@ -8,25 +8,16 @@ import javax.inject.Inject
 class SyncPhotoUseCase @Inject constructor(
     private val repository: PhotoRepository,
 ) {
-
-    suspend operator fun invoke(): Result<SyncPhotoUseCaseReturn> {
-        return repository.getLatestFetchTime().suspendFlatMap { time ->
-            when (time == 0L) {
-                true -> {
-                    repository.fetchAllPhotoLocation().suspendFlatMap { list ->
-                        when (repository.saveAllPhotoLocation(list)) {
-                            is Result.Success -> Result.Success(SyncPhotoUseCaseReturn(true))
-                            else -> Result.Failure(null)
-                        }
-                    }
+    suspend operator fun invoke(): Result<Unit> {
+        return repository.fetchAllPhotoLocation().suspendFlatMap { list ->
+            when (val result = repository.initializePhotoLocation(list)) {
+                is Result.Success -> {
+                    repository.saveLatestUpdateTime()
+                    Result.Success(Unit)
                 }
 
-                false -> Result.Success(SyncPhotoUseCaseReturn(false))
+                else -> Result.Failure(result.throwableOrNull())
             }
         }
     }
-
-    @JvmInline
-    value class SyncPhotoUseCaseReturn(val syncDone: Boolean)
-
 }

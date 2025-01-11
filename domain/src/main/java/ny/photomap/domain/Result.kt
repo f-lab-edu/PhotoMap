@@ -8,6 +8,7 @@ sealed class Result<out T> {
     fun isFailure(): Boolean = this is Failure
 
     fun getOrNull(): T? = if (this is Success) this.data else null
+    fun throwableOrNull(): Throwable? = if (this is Failure) this.throwable else null
 }
 
 inline fun <T> Result<T>.onSuccess(block: (T) -> Unit): Result<T> {
@@ -26,11 +27,13 @@ inline fun <T> Result<T>.onFailure(
     return this
 }
 
-fun <T> Result<T>.onResponse(onSuccess: (T) -> Unit, onFailure: (Throwable?) -> Unit) {
-    this.onSuccess {
-        onSuccess(it)
-    }.onFailure {
-        onFailure(it)
+suspend fun <R, T> Result<T>.onResponse(
+    ifSuccess: suspend (T) -> R,
+    ifFailure: suspend (Throwable?) -> R,
+): R {
+    return when (this) {
+        is Result.Success -> ifSuccess(this.data)
+        is Result.Failure -> ifFailure(this.throwable)
     }
 }
 

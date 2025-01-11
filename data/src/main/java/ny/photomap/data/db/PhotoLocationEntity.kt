@@ -1,6 +1,5 @@
 package ny.photomap.data.db
 
-import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import ny.photomap.data.model.ModelMapper
@@ -14,8 +13,6 @@ data class PhotoLocationEntity(
     val longitude: Double,
     val generatedTime: Long,
     val addedTime: Long,
-    @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
-    val thumbNail: ByteArray?,
 ) : ModelMapper<PhotoLocationModel> {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0
@@ -27,7 +24,6 @@ data class PhotoLocationEntity(
         longitude = longitude,
         generatedTimeMillis = generatedTime,
         addedTimeMillis = addedTime,
-        thumbNail = thumbNail
     )
 }
 
@@ -38,5 +34,4 @@ fun PhotoLocationModel.toEntity(): PhotoLocationEntity = PhotoLocationEntity(
     longitude = longitude,
     generatedTime = generatedTimeMillis,
     addedTime = addedTimeMillis,
-    thumbNail = thumbNail
 )
