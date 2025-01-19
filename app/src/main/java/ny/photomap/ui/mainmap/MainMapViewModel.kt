@@ -1,7 +1,6 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import androidx.annotation.StringRes
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,11 +15,12 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.BaseViewModel
+import ny.photomap.R
+import ny.photomap.domain.model.PhotoLocationEntityModel
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
-import ny.photomap.domain.usecase.GetLatestPhotoLocationUseCase
-import ny.photomap.domain.usecase.GetPhotoLocationUseCase
+import ny.photomap.domain.usecase.GetPhotoLocationsInBoundaryUseCase
 import ny.photomap.domain.usecase.SyncPhotoUseCase
 import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.model.LocationUIModel
@@ -73,7 +73,6 @@ data class MainMapState(
     val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0),
     val targetPhoto: PhotoLocationUIModel? = null,
     val loading: Boolean = false,
-//    val permissionList: List<String>? = null,
     val showPermissionDialog: Boolean = false,
     val isFirstAppUsage: Boolean = false,
 )
@@ -93,16 +92,15 @@ sealed interface MainMapEffect {
 class MainMapViewModel @Inject constructor(
     private val checkSyncState: CheckSyncStateUseCase,
     private val syncPhoto: SyncPhotoUseCase,
-    private val getLatestPhotoLocation: GetLatestPhotoLocationUseCase,
-    private val getPhotoLocationUseCase: GetPhotoLocationUseCase,
-) : ViewModel() {
+    private val getPhotoLocationsInBoundaryUseCase: GetPhotoLocationsInBoundaryUseCase,
+) : BaseViewModel<MainMapIntent, MainMapState, MainMapEffect>() {
 
     private val _effect = MutableSharedFlow<MainMapEffect>()
-    val effect: SharedFlow<MainMapEffect> = _effect
+    override val effect: SharedFlow<MainMapEffect> = _effect
 
-    private val intent = Channel<MainMapIntent>()
+    override val intent = Channel<MainMapIntent>()
 
-    val state = intent.receiveAsFlow().runningFold(MainMapState()) { state, intent ->
+    override val state = intent.receiveAsFlow().runningFold(MainMapState()) { state, intent ->
         withContext(Dispatchers.Default) {
             reducer(state, intent)
         }
@@ -116,13 +114,13 @@ class MainMapViewModel @Inject constructor(
     private val photoCache = mutableMapOf<LocationBoundsUIModel, List<PhotoLocationUIModel>>()
 
 
-    fun handleIntent(event: MainMapIntent) {
+    override fun handleIntent(event: MainMapIntent) {
         viewModelScope.launch(Dispatchers.Default) {
             intent.send(event)
         }
     }
 
-    private suspend fun reducer(state: MainMapState, intent: MainMapIntent): MainMapState {
+    override suspend fun reducer(state: MainMapState, intent: MainMapIntent): MainMapState {
         Timber.d("state: $state\nintent: $intent")
         return when (intent) {
             MainMapIntent.CheckSyncTime -> checkSyncStateAndRequestPermission(state)
@@ -231,13 +229,13 @@ class MainMapViewModel @Inject constructor(
             _photoList.value = photoCache[cacheBounds]!!
             previousBounds = locationBounds
         } else {
-            val list = getPhotoLocationUseCase(
+            val list = getPhotoLocationsInBoundaryUseCase(
                 northLatitude = locationBounds.northLatitude,
                 southLatitude = locationBounds.southLatitude,
                 eastLongitude = locationBounds.eastLongitude,
                 westLongitude = locationBounds.westLongitude
             ).onResponse(ifSuccess = {
-                it.map(PhotoLocationModel::toPhotoLocationUiModel)
+                it.map(PhotoLocationEntityModel::toPhotoLocationUiModel)
             }, ifFailure = {
                 it?.printStackTrace()
                 Timber.d("싱크 실패")
@@ -255,8 +253,4 @@ class MainMapViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        intent.close()
-    }
 }

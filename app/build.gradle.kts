@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.secrets.gradle.plugin)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
@@ -93,6 +94,7 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.timber)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     ksp(libs.hilt.android.compiler)

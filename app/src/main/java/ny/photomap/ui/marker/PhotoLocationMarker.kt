@@ -39,7 +39,9 @@ fun PhotoLocationMarker(
     ) {
 
         AsyncImage(
-            modifier = Modifier.fillMaxSize().border(BorderStroke(1.dp, Color.White)),
+            modifier = Modifier
+                .fillMaxSize()
+                .border(BorderStroke(1.dp, Color.White)),
             model = ImageRequest.Builder(context)
                 .data(model.uri)
                 .crossfade(true)

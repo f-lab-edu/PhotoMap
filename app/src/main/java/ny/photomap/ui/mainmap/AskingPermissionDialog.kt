@@ -1,4 +1,4 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.DialogProperties
+import ny.photomap.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +33,8 @@ fun AskingPermissionDialog(
     ) {
         Column(
             modifier = Modifier
-                .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(dimensionResource(R.dimen.margin_small)))
+                .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(dimensionResource(
+                    R.dimen.margin_small)))
                 .padding(
                     dimensionResource(R.dimen.margin_medium)
                 )
