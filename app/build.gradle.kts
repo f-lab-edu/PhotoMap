@@ -41,11 +41,19 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val proguardFiles = rootProject.file("proguard").listFiles()
+                ?.filter { it.name.startsWith("proguard") }
+                ?.toTypedArray()
+            if (proguardFiles != null) {
+                proguardFiles(*proguardFiles)
+            }
+
+
             signingConfig = signingConfigs.getByName("release")
         }
     }
