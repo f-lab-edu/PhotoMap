@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
-import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
+import ny.photomap.data.preferences.PhotoLocationReferences
 import ny.photomap.domain.TimeStamp
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -26,7 +26,7 @@ import javax.inject.Inject
 class PhotoDataSourceImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val photoLocationDao: PhotoLocationDao,
-    private val preferences: PhotoLocationPreferencesImpl,
+    private val preferences: PhotoLocationReferences,
     private val timeStamp: TimeStamp,
 ) : PhotoDataSource {
 
