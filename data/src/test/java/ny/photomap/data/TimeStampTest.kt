@@ -6,7 +6,7 @@ import org.junit.Test
 
 class TimeStampTest {
 
-    var timeStamp : TimeStamp? = null
+    private lateinit var timeStamp : TimeStamp
 
     @Before
     fun setUp() {
@@ -14,23 +14,23 @@ class TimeStampTest {
     }
 
     @Test
-    fun `현재 시간 기능 테스트`() {
+    fun `현재 시간 반환`() {
         val startTime = System.currentTimeMillis()
-        val testResult = timeStamp?.currentTime
+        val testResult = timeStamp.currentTime
         val endTime = System.currentTimeMillis()
-        assert(testResult != null && testResult in startTime..endTime)
+        assert(testResult in startTime..endTime)
     }
 
     @Test
-    fun `현재의 시점이 과거의 시점으로부터 기준 일수를 지나갔다는 테스트`() {
+    fun `현재의 시점이 저장된 과거의 시점으로부터 기준 일수를 지나갔을 경우 true 반환`() {
         val time3DaysAgo = getTimeMillisTimeAfterDay(-3)
-        assert(timeStamp?.hasTimePassed(time3DaysAgo, 2) == true)
+        assert(timeStamp.hasTimePassed(time3DaysAgo, 2) == true)
     }
 
     @Test
-    fun `현재의 시점이 과거의 시점으로부터 기준 일 수를 아직 지나가지 않았다는 테스트`() {
+    fun `현재의 시점이 저장된 과거의 시점으로부터 기준 일 수를 아직 지나가지 않았을 경우 false 반환`() {
         val time3DaysAgo = getTimeMillisTimeAfterDay(-3)
-        assert(timeStamp?.hasTimePassed(time3DaysAgo, 5) == false)
+        assert(timeStamp.hasTimePassed(time3DaysAgo, 5) == false)
     }
 
     fun getTimeMillisTimeAfterDay(day: Int) : Long {
