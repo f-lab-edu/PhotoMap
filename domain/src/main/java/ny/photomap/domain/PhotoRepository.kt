@@ -1,20 +1,23 @@
 package ny.photomap.domain
 
-import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.domain.model.PhotoLocationRequestModel
+import ny.photomap.domain.model.PhotoLocationEntityModel
 
 interface PhotoRepository {
 
-    suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationModel>>
+    suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationRequestModel>>
 
-    suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationModel>>
+    suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationRequestModel>>
 
     suspend fun saveLatestUpdateTime(): Result<Unit>
 
     suspend fun getLatestUpdateTime(): Result<Long>
 
-    suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
+    suspend fun saveAllPhotoLocation(list: List<PhotoLocationRequestModel>) : Result<Unit>
 
     suspend fun deleteAllPhotoLocation() : Result<Unit>
+
+    suspend fun getPhotoLocation(id: Long) : Result<PhotoLocationEntityModel>
 
     suspend fun getPhotoLocation(
         latitude: Double,
@@ -22,7 +25,7 @@ interface PhotoRepository {
         range: Double,
         startTime: Long? = null,
         endTime: Long? = null,
-    ): Result<List<PhotoLocationModel>>
+    ): Result<List<PhotoLocationEntityModel>>
 
     suspend fun getPhotoLocation(
         northLatitude: Double,
@@ -31,11 +34,11 @@ interface PhotoRepository {
         westLongitude: Double,
         startTime: Long? = null,
         endTime: Long? = null,
-    ): Result<List<PhotoLocationModel>>
+    ): Result<List<PhotoLocationEntityModel>>
 
-    suspend fun initializePhotoLocation(list: List<PhotoLocationModel>) : Result<Unit>
+    suspend fun initializePhotoLocation(list: List<PhotoLocationRequestModel>) : Result<Unit>
 
-    suspend fun getLatestPhotoLocation() : Result<PhotoLocationModel?>
+    suspend fun getLatestPhotoLocation() : Result<PhotoLocationEntityModel?>
 
     // todo 추후 작업
     /*suspend fun getPhotoLocationWithOffset(

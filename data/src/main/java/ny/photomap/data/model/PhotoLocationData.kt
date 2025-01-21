@@ -1,7 +1,7 @@
 package ny.photomap.data.model
 
 import android.net.Uri
-import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.domain.model.PhotoLocationRequestModel
 
 data class PhotoLocationData(
     val uri: Uri,
@@ -10,8 +10,8 @@ data class PhotoLocationData(
     val longitude: Double,
     val generatedTime: Long,
     val addedTime: Long,
-) : ModelMapper<PhotoLocationModel> {
-    override fun toModel(): PhotoLocationModel = PhotoLocationModel(
+) : ModelMapper<PhotoLocationRequestModel> {
+    override fun toModel(): PhotoLocationRequestModel = PhotoLocationRequestModel(
         uri = this@PhotoLocationData.uri.toString(),
         name = name,
         latitude = latitude,

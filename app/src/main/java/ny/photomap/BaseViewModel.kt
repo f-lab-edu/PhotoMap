@@ -1,30 +1,12 @@
 package ny.photomap
 
 import androidx.lifecycle.ViewModel
-import ny.photomap.domain.Result
 
-class BaseViewModel : ViewModel() {
+abstract class BaseViewModel<Intent, State, Effect> : ViewModel(),
+    MVIViewModel<Intent, State, Effect> {
 
-    fun <R, T : Result<R>> handleResult(
-        result: Result<R>,
-        onSuccess: (data: R) -> Unit = {},
-        onFailure: (Throwable?) -> Unit = {},
-    ) {
-        when (result) {
-            is Result.Success<R> -> onSuccess(result.data)
-            is Result.Failure -> onFailure(result.throwable)
-        }
-    }
-
-    fun <T> handleResult(
-        result: T,
-        onSuccess: (T) -> Unit = {},
-        onFailure: (Throwable?) -> Unit = {},
-    ) {
-        try {
-            onSuccess(result)
-        } catch (e: Exception) {
-            onFailure(e)
-        }
+    override fun onCleared() {
+        super.onCleared()
+        intent.cancel()
     }
 }

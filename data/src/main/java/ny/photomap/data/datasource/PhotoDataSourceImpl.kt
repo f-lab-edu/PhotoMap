@@ -160,7 +160,10 @@ class PhotoDataSourceImpl @Inject constructor(
 
     override suspend fun deleteAllPhotoLocation() {
         return photoLocationDao.deleteAll()
+    }
 
+    override suspend fun getPhotoLocation(id: Long): PhotoLocationEntity {
+        return photoLocationDao.getLocation(id = id)
     }
 
     override suspend fun getPhotoLocation(

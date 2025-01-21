@@ -1,4 +1,4 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -34,7 +35,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import ny.photomap.BuildConfig
 import ny.photomap.model.LocationBoundsUIModel
+import ny.photomap.model.PhotoLocationUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
 import ny.photomap.ui.marker.PhotoLocationClustering
@@ -44,7 +47,8 @@ import timber.log.Timber
 @Composable
 fun MainPhotoMapScreen(
     modifier: Modifier,
-    viewModel: MainMapViewModel = viewModel(),
+    onPhotoClick: (Long) -> Unit,
+    viewModel: MainMapViewModel = hiltViewModel(),
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     Scaffold(modifier = modifier.fillMaxSize(),
@@ -58,7 +62,8 @@ fun MainPhotoMapScreen(
         val context = LocalContext.current
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        var permissionList = getPermissionList(needReadFilePermission = true, needLocationPermission = true)
+        var permissionList =
+            getPermissionList(needReadFilePermission = true, needLocationPermission = true)
 
         val permissionState =
             rememberMultiplePermissionsState(
@@ -72,6 +77,8 @@ fun MainPhotoMapScreen(
                             if (readImagePermissions.size > 1) readImagePermissions.last() else null,
                             false
                         )
+                        Timber.d("imageAccessPermission: $imageAccessPermission, imageVisualUserSelectedPermission: $imageVisualUserSelectedPermission")
+
                         if (imageAccessPermission || imageVisualUserSelectedPermission) {
                             viewModel.handleIntent(MainMapIntent.Sync)
                         } else {
@@ -222,9 +229,15 @@ fun MainPhotoMapScreen(
                     onMapClick = { lnglat ->
                         Timber.d("lnglat : $lnglat")
                     },
-                    uiSettings = MapUiSettings(rotationGesturesEnabled = false)
+                    uiSettings = MapUiSettings(
+                        rotationGesturesEnabled = false,
+                        indoorLevelPickerEnabled = false,
+                        mapToolbarEnabled = false
+                    )
                 ) {
-                    PhotoLocationClustering(photoList)
+                    PhotoLocationClustering(
+                        items = photoList,
+                        onPhotoClick = { photo -> onPhotoClick(photo.id) })
                 }
 
                 Column(modifier = Modifier.align(alignment = Alignment.TopEnd)) {

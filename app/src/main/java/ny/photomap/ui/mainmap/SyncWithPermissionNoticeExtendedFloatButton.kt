@@ -1,10 +1,10 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ButtonDefaults
@@ -25,10 +25,11 @@ import androidx.compose.ui.res.stringResource
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionStatus
+import ny.photomap.R
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CurrentLocationWithPermissionNoticeExtendedFloatButton(
+fun SyncWithPermissionNoticeExtendedFloatButton(
     modifier: Modifier = Modifier,
     permissionState: MultiplePermissionsState,
     targetPermissionList: List<String>,
@@ -36,15 +37,23 @@ fun CurrentLocationWithPermissionNoticeExtendedFloatButton(
 ) {
     var isExtended: Boolean by remember { mutableStateOf(false) }
 
-    val isGranted = permissionState.permissions.any { permissionState ->
-        targetPermissionList.any { targetPermission ->
-            targetPermission == permissionState.permission && permissionState.status == PermissionStatus.Granted
-        }
-    }
+    val targetPermission = targetPermissionList.firstOrNull()
+    val visualUserSelectedPermission =
+        if (targetPermissionList.size > 1) targetPermissionList.last() else null
+
+    val isGranted = if (targetPermission == null) true else
+        permissionState.permissions.find { it.permission == targetPermission }?.status == PermissionStatus.Granted
+
+    val isGrantedVisualUserSelectedPermission = if (visualUserSelectedPermission == null) true else
+        permissionState.permissions.find { it.permission == visualUserSelectedPermission }?.status == PermissionStatus.Granted
 
     val (containerColor, contentColor) = when {
         isGranted -> {
             MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
+        }
+
+        isGrantedVisualUserSelectedPermission -> {
+            MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.tertiary
         }
 
         else -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.error
@@ -55,9 +64,11 @@ fun CurrentLocationWithPermissionNoticeExtendedFloatButton(
         if (isExtended) {
 
             val text = when {
-                isGranted -> stringResource(R.string.button_current_location)
+                isGranted -> stringResource(R.string.button_sync)
 
-                else -> stringResource(R.string.button_request_location_permission_with_denied)
+                isGrantedVisualUserSelectedPermission -> stringResource(R.string.button_request_file_permission_with_user_visual_selected)
+
+                else -> stringResource(R.string.button_request_file_permission_with_denied)
             }
 
             FilledTonalButton(
@@ -89,7 +100,14 @@ fun CurrentLocationWithPermissionNoticeExtendedFloatButton(
             contentColor = contentColor
         ) {
             BadgedBox(badge = {
-                if (!isGranted) {
+                if (!isGranted && isGrantedVisualUserSelectedPermission) {
+                    Badge(
+                        containerColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ) {
+                        Text(stringResource(R.string.badge_alert))
+                    }
+                } else if (!isGranted) {
                     Badge(
                         containerColor = MaterialTheme.colorScheme.onErrorContainer,
                         contentColor = MaterialTheme.colorScheme.onError
@@ -98,7 +116,7 @@ fun CurrentLocationWithPermissionNoticeExtendedFloatButton(
                     }
                 }
             }) {
-                Icon(Icons.Filled.LocationOn, "Small floating action button.")
+                Icon(Icons.Filled.Refresh, "Small floating action button.")
             }
 
         }

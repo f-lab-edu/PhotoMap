@@ -1,4 +1,4 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import ny.photomap.R
 import ny.photomap.ui.theme.PhotoMapTheme
 
 sealed class SnackbarType {
