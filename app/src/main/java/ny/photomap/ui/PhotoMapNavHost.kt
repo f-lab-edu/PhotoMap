@@ -21,9 +21,7 @@ fun PhotoMapNavHost() {
             )
         }
         composable<Destination.Photo> {
-            PhotoScreen(
-                modifier = Modifier,
-            )
+            PhotoScreen()
         }
     }
 }

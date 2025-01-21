@@ -73,7 +73,7 @@ class PhotoViewModel @Inject constructor(
                         val model = it.toPhotoLocationUiModel()
                         PhotoState(
                             location = model.location.toString(),
-                            dateTime = model.time.toString(),
+                            dateTime = model.getDateText(),
                             uri = model.uri
                         )
                     },
