@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,10 +30,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.palette.graphics.Palette
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.crossfade
+import coil3.toBitmap
 import kotlinx.coroutines.flow.collectLatest
 import ny.photomap.ui.mainmap.SuccessFailureSnackbar
 
@@ -50,6 +50,8 @@ fun PhotoScreen(
     val snackBarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var textBackgroundColor by remember { mutableStateOf(Color.Black) }
+    var iconBackgroundColor by remember { mutableStateOf(Color.Black) }
 
     LaunchedEffect(Unit) {
         viewModel.handleIntent(PhotoIntent.LoadPhoto)
@@ -75,6 +77,13 @@ fun PhotoScreen(
         .data(state.uri)
         .crossfade(true)
         .allowHardware(false)
+        .listener(onSuccess = { _, successResult ->
+            val palette = Palette.Builder(successResult.image.toBitmap()).generate()
+            palette.mutedSwatch?.rgb?.let {
+                textBackgroundColor = Color(it)
+                iconBackgroundColor = Color(it)
+            }
+        })
         .build()
 
     Box {
@@ -91,23 +100,21 @@ fun PhotoScreen(
             contentScale = ContentScale.Crop
         )
 
-        var shownTopBottomBar by remember { mutableStateOf(true) }
+        var shownLocationAndDate by remember { mutableStateOf(true) }
 
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                PhotoAppBar(
-                    location = state.location ?: "",
-                    shownText = shownTopBottomBar
+                PhotoTopAppBar(
+                    iconBackgroundColor = iconBackgroundColor,
                 )
             }, bottomBar = {
-                BottomAppBar(
-                    contentColor = Color.White,
-                    containerColor = Color.Transparent
-                ) {
-                    if (shownTopBottomBar)
-                        Text(text = state.dateTime ?: "", color = Color.White)
-                }
+                PhotoBottomAppBar(
+                    location = state.location ?: "",
+                    dateTime = state.dateTime ?: "",
+                    shownText = shownLocationAndDate,
+                    textBackgroundColor = textBackgroundColor
+                )
             }, snackbarHost = {
                 SnackbarHost(snackBarHostState) {
                     SuccessFailureSnackbar(it)
@@ -174,7 +181,7 @@ fun PhotoScreen(
                                 }
                             },
                             onTap = {
-                                shownTopBottomBar = !shownTopBottomBar
+                                shownLocationAndDate = !shownLocationAndDate
                             }
                         )
                     }

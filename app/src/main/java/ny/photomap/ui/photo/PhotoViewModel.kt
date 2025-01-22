@@ -1,11 +1,14 @@
 package ny.photomap.ui.photo
 
+import android.content.Context
+import android.location.Geocoder
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -19,9 +22,11 @@ import kotlinx.coroutines.withContext
 import ny.photomap.BaseViewModel
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.GetPhotoLocationUseCase
+import ny.photomap.model.LocationUIModel
 import ny.photomap.model.toPhotoLocationUiModel
 import ny.photomap.ui.Destination
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 sealed interface PhotoIntent {
@@ -41,6 +46,7 @@ sealed interface PhotoEffect {
 
 @HiltViewModel
 class PhotoViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val getPhotoLocation: GetPhotoLocationUseCase,
 ) : BaseViewModel<PhotoIntent, PhotoState, PhotoEffect>() {
@@ -72,12 +78,13 @@ class PhotoViewModel @Inject constructor(
                     ifSuccess = { it ->
                         val model = it.toPhotoLocationUiModel()
                         PhotoState(
-                            location = model.location.toString(),
+                            location = getLocationText(model.location),
                             dateTime = model.getDateText(),
                             uri = model.uri
                         )
                     },
                     ifFailure = {
+                        it?.printStackTrace()
                         _effect.emit(PhotoEffect.Error(message = ny.photomap.R.string.load_photo_list_fail))
                         state
                     }
@@ -86,6 +93,13 @@ class PhotoViewModel @Inject constructor(
 
             PhotoIntent.GoBack -> state
         }
+    }
+
+    // todo : GeoCoding API로 변경
+    private fun getLocationText(locationModel: LocationUIModel): String {
+        val addressList = Geocoder(context, Locale.getDefault())
+            .getFromLocation(locationModel.latitude, locationModel.longitude, 1)
+        return addressList?.first()?.getAddressLine(0) ?: ""
     }
 
 
