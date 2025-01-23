@@ -24,7 +24,8 @@ import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.GetPhotoLocationUseCase
 import ny.photomap.model.LocationUIModel
 import ny.photomap.model.toPhotoLocationUiModel
-import ny.photomap.ui.Destination
+import ny.photomap.ui.navigation.Destination
+import ny.photomap.ui.navigation.Navigator
 import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
@@ -49,6 +50,7 @@ class PhotoViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val getPhotoLocation: GetPhotoLocationUseCase,
+    private val navigator: Navigator
 ) : BaseViewModel<PhotoIntent, PhotoState, PhotoEffect>() {
 
     private val photo = savedStateHandle.toRoute<Destination.Photo>()
@@ -100,6 +102,12 @@ class PhotoViewModel @Inject constructor(
         val addressList = Geocoder(context, Locale.getDefault())
             .getFromLocation(locationModel.latitude, locationModel.longitude, 1)
         return addressList?.first()?.getAddressLine(0) ?: ""
+    }
+
+    fun goBack() {
+        viewModelScope.launch{
+            navigator.navigateUp()
+        }
     }
 
 

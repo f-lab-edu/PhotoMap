@@ -26,6 +26,8 @@ import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.model.LocationUIModel
 import ny.photomap.model.PhotoLocationUIModel
 import ny.photomap.model.toPhotoLocationUiModel
+import ny.photomap.ui.navigation.Destination
+import ny.photomap.ui.navigation.Navigator
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.List
@@ -93,6 +95,7 @@ class MainMapViewModel @Inject constructor(
     private val checkSyncState: CheckSyncStateUseCase,
     private val syncPhoto: SyncPhotoUseCase,
     private val getPhotoLocationsInBoundaryUseCase: GetPhotoLocationsInBoundaryUseCase,
+    private val navigator: Navigator,
 ) : BaseViewModel<MainMapIntent, MainMapState, MainMapEffect>() {
 
     private val _effect = MutableSharedFlow<MainMapEffect>()
@@ -182,7 +185,9 @@ class MainMapViewModel @Inject constructor(
                     _effect.emit(
                         MainMapEffect.RequestLocationPermissions
                     )
-                    state
+                    state.copy(
+                        loading = false
+                    )
                 }
             }, ifFailure = {
                 Timber.d("싱크 없이 진행")
@@ -250,6 +255,12 @@ class MainMapViewModel @Inject constructor(
             _photoList.value = list
             photoCache[locationBounds] = list
             previousBounds = locationBounds
+        }
+    }
+
+    fun onPhotoClick(photoId: Long) {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Photo(photoId))
         }
     }
 

@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
@@ -32,12 +31,12 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import ny.photomap.BuildConfig
 import ny.photomap.model.LocationBoundsUIModel
-import ny.photomap.model.PhotoLocationUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
 import ny.photomap.ui.marker.PhotoLocationClustering
@@ -47,7 +46,6 @@ import timber.log.Timber
 @Composable
 fun MainPhotoMapScreen(
     modifier: Modifier,
-    onPhotoClick: (Long) -> Unit,
     viewModel: MainMapViewModel = hiltViewModel(),
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
@@ -123,6 +121,7 @@ fun MainPhotoMapScreen(
                                 needLocationPermission = true,
                                 needReadFilePermission = false
                             )
+                            delay(800L)
                             permissionState.launchMultiplePermissionRequest()
                         }
 
@@ -237,7 +236,8 @@ fun MainPhotoMapScreen(
                 ) {
                     PhotoLocationClustering(
                         items = photoList,
-                        onPhotoClick = { photo -> onPhotoClick(photo.id) })
+                        onPhotoClick = { photo -> viewModel.onPhotoClick(photo.id) }
+                    )
                 }
 
                 Column(modifier = Modifier.align(alignment = Alignment.TopEnd)) {

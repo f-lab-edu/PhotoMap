@@ -107,7 +107,9 @@ fun PhotoScreen(
             topBar = {
                 PhotoTopAppBar(
                     iconBackgroundColor = iconBackgroundColor,
-                )
+                ) {
+                    viewModel.goBack()
+                }
             }, bottomBar = {
                 PhotoBottomAppBar(
                     location = state.location ?: "",
