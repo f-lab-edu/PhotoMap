@@ -22,7 +22,7 @@ import timber.log.Timber
 @Composable
 fun PhotoLocationClustering(
     items: List<PhotoLocationUIModel>,
-    onPhotoClick: (PhotoLocationUIModel) -> Unit,
+    onPhotoClick: (item: PhotoLocationUIModel, clusteringList: List<PhotoLocationUIModel>) -> Unit,
 ) {
 
     val configuration = LocalConfiguration.current
@@ -66,7 +66,7 @@ fun PhotoLocationClustering(
         clusterManager.setOnClusterItemClickListener {
             Timber.d("사진 아이템 클릭 $it")
             // todo : 당장은 화면 진입 기능으로 쓰이지만 추후 위치 정보를 띄워주는 기능으로 변경
-            onPhotoClick(it)
+            onPhotoClick(it, listOf(it))
             false
         }
         clusterManager.setOnClusterItemInfoWindowClickListener {

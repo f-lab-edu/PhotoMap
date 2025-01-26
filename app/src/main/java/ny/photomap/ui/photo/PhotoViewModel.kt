@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ny.photomap.BaseViewModel
+import ny.photomap.MVIEffect
+import ny.photomap.MVIIntent
+import ny.photomap.MVIState
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.GetPhotoLocationUseCase
 import ny.photomap.model.LocationUIModel
@@ -30,7 +33,7 @@ import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
 
-sealed interface PhotoIntent {
+sealed interface PhotoIntent : MVIIntent {
     object LoadPhoto : PhotoIntent
     object GoBack : PhotoIntent
 }
@@ -39,9 +42,9 @@ data class PhotoState(
     val location: String? = null,
     val dateTime: String? = null,
     val uri: Uri? = null,
-)
+) : MVIState
 
-sealed interface PhotoEffect {
+sealed interface PhotoEffect : MVIEffect {
     data class Error(@StringRes val message: Int) : PhotoEffect
 }
 
@@ -50,7 +53,7 @@ class PhotoViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val getPhotoLocation: GetPhotoLocationUseCase,
-    private val navigator: Navigator
+    private val navigator: Navigator,
 ) : BaseViewModel<PhotoIntent, PhotoState, PhotoEffect>() {
 
     private val photo = savedStateHandle.toRoute<Destination.Photo>()
@@ -105,7 +108,7 @@ class PhotoViewModel @Inject constructor(
     }
 
     fun goBack() {
-        viewModelScope.launch{
+        viewModelScope.launch {
             navigator.navigateUp()
         }
     }

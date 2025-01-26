@@ -31,7 +31,6 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MapsComposeExperimentalApi
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -60,44 +59,32 @@ fun MainPhotoMapScreen(
         val context = LocalContext.current
         val state by viewModel.state.collectAsStateWithLifecycle()
 
-        var permissionList =
-            getPermissionList(needReadFilePermission = true, needLocationPermission = true)
-
-        val permissionState =
-            rememberMultiplePermissionsState(
-                permissions = permissionList,
-                onPermissionsResult = { map ->
-                    Timber.d("onPermissionsResult")
-                    if (permissionList.containsAll(readImagePermissions)) {
-                        val imageAccessPermission =
-                            map.getOrDefault(readImagePermissions.firstOrNull(), false)
-                        val imageVisualUserSelectedPermission = map.getOrDefault(
-                            if (readImagePermissions.size > 1) readImagePermissions.last() else null,
-                            false
-                        )
-                        Timber.d("imageAccessPermission: $imageAccessPermission, imageVisualUserSelectedPermission: $imageVisualUserSelectedPermission")
-
-                        if (imageAccessPermission || imageVisualUserSelectedPermission) {
-                            viewModel.handleIntent(MainMapIntent.Sync)
-                        } else {
-                            viewModel.handleIntent(MainMapIntent.ResetViewState)
-                        }
-                    }
-
-                    if (permissionList.containsAll(locationPermissions)) {
-                        val locationPermission =
-                            locationPermissions.any { map.getOrDefault(it, false) }
-
-                        if (locationPermission) {
-                            viewModel.handleIntent(MainMapIntent.SearchCurrentLocation)
-                        } else {
-                            viewModel.handleIntent(MainMapIntent.DenyLocationPermission)
-                        }
-                    }
-
+        val readImagePermissionState = rememberMultiplePermissionsState(readImagePermissions,
+            onPermissionsResult = { map ->
+                val imageAccessPermission =
+                    map.getOrDefault(readImagePermissions.firstOrNull(), false)
+                val imageVisualUserSelectedPermission = map.getOrDefault(
+                    if (readImagePermissions.size > 1) readImagePermissions.last() else null,
+                    false
+                )
+                Timber.d("imageAccessPermission: $imageAccessPermission, imageVisualUserSelectedPermission: $imageVisualUserSelectedPermission")
+                if (imageAccessPermission || imageVisualUserSelectedPermission) {
+                    viewModel.handleIntent(MainMapIntent.Sync)
+                } else {
+                    viewModel.handleIntent(MainMapIntent.ResetViewState)
                 }
-            )
+            })
 
+        val locationPermissionState =
+            rememberMultiplePermissionsState(locationPermissions, onPermissionsResult = { map ->
+                val locationPermission =
+                    locationPermissions.any { map.getOrDefault(it, false) }
+                if (locationPermission) {
+                    viewModel.handleIntent(MainMapIntent.SearchCurrentLocation)
+                } else {
+                    viewModel.handleIntent(MainMapIntent.DenyLocationPermission)
+                }
+            })
 
         val photoList by viewModel.photoList.collectAsStateWithLifecycle()
 
@@ -106,9 +93,10 @@ fun MainPhotoMapScreen(
         val fusedLocationClient =
             remember { LocationServices.getFusedLocationProviderClient(context) }
 
-
         LaunchedEffect(Unit) {
-            viewModel.handleIntent(MainMapIntent.CheckSyncTime)
+            if (viewModel.shouldInitialized) {
+                viewModel.handleIntent(MainMapIntent.CheckSyncTime)
+            }
         }
 
         LaunchedEffect(Unit) {
@@ -117,14 +105,8 @@ fun MainPhotoMapScreen(
                     Timber.d("effect: $effect")
                     when (effect) {
                         is MainMapEffect.RequestLocationPermissions -> {
-                            permissionList = getPermissionList(
-                                needLocationPermission = true,
-                                needReadFilePermission = false
-                            )
-                            delay(800L)
-                            permissionState.launchMultiplePermissionRequest()
+                            locationPermissionState.launchMultiplePermissionRequest()
                         }
-
 
                         MainMapEffect.NavigateToAppSetting -> withContext(Dispatchers.Main) {
                             context.startActivity(
@@ -140,7 +122,7 @@ fun MainPhotoMapScreen(
                         }
 
                         is MainMapEffect.NavigateToPhoto -> {
-
+                            viewModel.onPhotoClick(effect.targetPhoto.id)
                         }
 
                         is MainMapEffect.Notice -> withContext(Dispatchers.Main) {
@@ -181,11 +163,7 @@ fun MainPhotoMapScreen(
         if (state.showPermissionDialog) {
             AskingPermissionDialog(isFirstUsage = state.isFirstAppUsage, onConfirm = {
                 viewModel.handleIntent(MainMapIntent.ResetViewState)
-                permissionList = getPermissionList(
-                    needReadFilePermission = true,
-                    needLocationPermission = false
-                )
-                permissionState.launchMultiplePermissionRequest()
+                readImagePermissionState.launchMultiplePermissionRequest()
             }) {
                 viewModel.handleIntent(MainMapIntent.ResetViewState)
             }
@@ -236,7 +214,14 @@ fun MainPhotoMapScreen(
                 ) {
                     PhotoLocationClustering(
                         items = photoList,
-                        onPhotoClick = { photo -> viewModel.onPhotoClick(photo.id) }
+                        onPhotoClick = { photo, clusteringList ->
+                            viewModel.handleIntent(
+                                MainMapIntent.SelectPhotoLocationMarker(
+                                    photoList = clusteringList,
+                                    targetPhoto = photo
+                                )
+                            )
+                        }
                     )
                 }
 
@@ -244,7 +229,7 @@ fun MainPhotoMapScreen(
 
                     CurrentLocationWithPermissionNoticeExtendedFloatButton(
                         modifier = Modifier.align(Alignment.End),
-                        permissionState = permissionState,
+                        permissionState = locationPermissionState,
                         targetPermissionList = locationPermissions,
                         onClick = { hasPermission ->
                             if (hasPermission) viewModel.handleIntent(MainMapIntent.SearchCurrentLocation)
@@ -254,7 +239,7 @@ fun MainPhotoMapScreen(
 
                     SyncWithPermissionNoticeExtendedFloatButton(
                         modifier = Modifier.align(Alignment.End),
-                        permissionState = permissionState,
+                        permissionState = readImagePermissionState,
                         targetPermissionList = readImagePermissions,
                         onClick = { hasPermission ->
                             if (hasPermission) viewModel.handleIntent(MainMapIntent.Sync)
@@ -274,14 +259,3 @@ fun MainPhotoMapScreen(
 
     }
 }
-
-fun getPermissionList(
-    needReadFilePermission: Boolean = true,
-    needLocationPermission: Boolean = true,
-): List<String> =
-    when {
-        needReadFilePermission && needLocationPermission -> readImagePermissions + locationPermissions
-        needReadFilePermission -> readImagePermissions
-        needLocationPermission -> locationPermissions
-        else -> emptyList()
-    }
