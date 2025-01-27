@@ -4,6 +4,7 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.runTest
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationDatabase
@@ -38,31 +39,56 @@ class PhotoLocationDaoTest {
     }
 
     @Test
-    fun `모두_조회`() = runTest {
-        dao.deleteAll()
+    fun `단일_삽입_후_모든_위치사진_조회`() = runTest {
         dao.insert(ENTITY_1)
         val list = dao.getAll()
-        assert(list[0] == ENTITY_1)
+
+        assertEquals(ENTITY_1, list[0])
+        assertEquals(ENTITY_1.uri, list[0].uri)
+        assertEquals(ENTITY_1.latitude, list[0].latitude)
+        assertEquals(ENTITY_1.longitude, list[0].longitude)
     }
 
     @Test
-    fun `장소_필터링_조회`() = runTest {
-        dao.deleteAll()
+    fun `리스트_삽입_후_모든_위치사진_조회`() = runTest {
         dao.insertAll(ENTITY_LIST)
+        val list = dao.getAll()
+        assertEquals(list.size, ENTITY_LIST.size)
+    }
+
+
+    @Test
+    fun `중심_위치정보에서_반경_범위로_위치사진_조회`() = runTest {
+        dao.insertAll(ENTITY_LIST)
+
         val list = dao.getLocationOf(
             latitude = LOCATION_2.first, longitude = LOCATION_2.second, range = 3.0
         )
-        assertThat(list).hasSize(4)
-
         val list2 = dao.getLocationOf(
             latitude = LOCATION_3.first, longitude = LOCATION_3.second, range = 0.0
         )
+
+        assertThat(list).hasSize(4)
         assertThat(list2).hasSize(0)
     }
 
     @Test
+    fun `화면_위아래_옆_범위로_위치사진_조회`() = runTest {
+
+    }
+
+    @Test
+    fun `중심_위치정보에서_반경_범위와_기록_날짜_범위로_위치사진_조회`() = runTest {
+
+    }
+
+    @Test
+    fun `화면_위아래_옆_범위와_기록_날짜_범위로_위치사진_조회`() = runTest {
+
+    }
+
+    @Test
     fun `장소_시간_필터링_조회`() = runTest {
-        dao.deleteAll()
         dao.insertAll(ENTITY_LIST)
 
         // range 범위 확인
@@ -98,7 +124,6 @@ class PhotoLocationDaoTest {
 
     @Test
     fun `장소_시간_필터링_개수`() = runTest {
-        dao.deleteAll()
         dao.insertAll(ENTITY_LIST)
 
         // range 범위 확인
@@ -133,13 +158,6 @@ class PhotoLocationDaoTest {
     }
 
     @Test
-    fun `추가_단일`() = runTest {
-        dao.deleteAll()
-        dao.insert(ENTITY_1)
-        assertThat(dao.getAll()).hasSize(1)
-    }
-
-    @Test
     fun `추가_리스트`() = runTest {
         dao.deleteAll()
         dao.insertAll(ENTITY_LIST)
@@ -154,6 +172,16 @@ class PhotoLocationDaoTest {
         dao.insertAll(ENTITY_LIST)
         dao.deleteAll()
         assertThat(dao.getAll()).isEmpty()
+    }
+
+    @Test
+    fun `기존_정보_제거_후_업데이트`() = runTest {
+
+    }
+
+    @Test
+    fun `가장_최근_위치사진_조회`() = runTest {
+
     }
 
 

@@ -24,8 +24,8 @@ val ENTITY_LIST: List<PhotoLocationEntity>
         PhotoLocationEntity(
             uri = "$URI_WITH_NUMBER $it",
             name = "$it",
-            latitude = LOCATION_2.first + (it * 1),
-            longitude = LOCATION_2.second + (it * 1),
+            latitude = LOCATION_2.first + it,
+            longitude = LOCATION_2.second + it,
             generatedTime = TIME_1 + (it * 10_000),
             addedTime = TIME_1 + (it * 20_000),
         )

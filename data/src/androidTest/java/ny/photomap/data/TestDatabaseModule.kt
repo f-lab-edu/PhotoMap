@@ -1,6 +1,7 @@
 package ny.photomap.data
 
 import android.content.Context
+import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -17,5 +18,8 @@ import ny.photomap.data.di.ProvideSingletonModule
 class TestDatabaseModule {
     @Provides
     fun providePhotoLocationDatabase(@ApplicationContext context: Context): PhotoLocationDatabase =
-        PhotoLocationDatabase.getInstance(context)
+        Room.inMemoryDatabaseBuilder(
+            context,
+            PhotoLocationDatabase::class.java,
+        ).build()
 }
