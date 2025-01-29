@@ -17,7 +17,7 @@ import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.data.preferences.PhotoLocationReferences
-import ny.photomap.domain.TimeStamp
+import ny.photomap.data.TimeStamp
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -27,7 +27,6 @@ class PhotoDataSourceImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val photoLocationDao: PhotoLocationDao,
     private val preferences: PhotoLocationReferences,
-    private val timeStamp: TimeStamp,
 ) : PhotoDataSource {
 
     private val projection = arrayOf(
@@ -145,8 +144,8 @@ class PhotoDataSourceImpl @Inject constructor(
             queryToList(getQueryAfter(fetchTime))
         }
 
-    override suspend fun saveLatestUpdateTime() {
-        return preferences.updateTimeSyncDatabase(timeStamp.currentTime)
+    override suspend fun saveLatestUpdateTime(lastSyncTime: Long) {
+        return preferences.updateTimeSyncDatabase(lastSyncTime)
     }
 
     override suspend fun getLatestUpdateTime(): Long {

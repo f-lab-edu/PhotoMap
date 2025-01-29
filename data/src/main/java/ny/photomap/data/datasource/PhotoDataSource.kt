@@ -9,7 +9,7 @@ interface PhotoDataSource {
 
     suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): List<PhotoLocationData>
 
-    suspend fun saveLatestUpdateTime()
+    suspend fun saveLatestUpdateTime(lastSyncTime : Long)
 
     suspend fun getLatestUpdateTime(): Long
 

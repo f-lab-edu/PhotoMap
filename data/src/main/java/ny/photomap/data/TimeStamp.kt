@@ -1,4 +1,4 @@
-package ny.photomap.domain
+package ny.photomap.data
 
 interface TimeStamp {
     val currentTime : Long

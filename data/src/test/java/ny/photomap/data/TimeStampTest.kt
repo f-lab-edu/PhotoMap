@@ -2,7 +2,6 @@ package ny.photomap.data
 
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import ny.photomap.domain.TimeStamp
 import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit

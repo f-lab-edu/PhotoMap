@@ -1,6 +1,5 @@
 package ny.photomap.data
 
-import ny.photomap.domain.TimeStamp
 import timber.log.Timber
 import java.lang.System
 import javax.inject.Inject
