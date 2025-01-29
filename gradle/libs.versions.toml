@@ -32,6 +32,7 @@ navigationCompose = "2.8.5"
 hiltNavigationCompose = "1.2.0"
 playServicesLocation = "21.3.0"
 timber = "5.0.1"
+junitJupiter = "5.11.4"
 
 
 [libraries]
@@ -85,6 +86,7 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 kotlinx-coroutines-play-services = { group="org.jetbrains.kotlinx", name="kotlinx-coroutines-play-services", version.ref="kotlinxCoroutines" }
+junit-jupiter = { group="org.junit.jupiter", name="junit-jupiter", version.ref="junitJupiter"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
