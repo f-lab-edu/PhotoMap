@@ -20,7 +20,10 @@ import timber.log.Timber
 @OptIn(MapsComposeExperimentalApi::class)
 @GoogleMapComposable
 @Composable
-fun PhotoLocationClustering(items: List<PhotoLocationUIModel>) {
+fun PhotoLocationClustering(
+    items: List<PhotoLocationUIModel>,
+    onPhotoClick: (PhotoLocationUIModel) -> Unit,
+) {
 
     val configuration = LocalConfiguration.current
     val screenHeight = configuration.screenHeightDp.dp
@@ -47,7 +50,7 @@ fun PhotoLocationClustering(items: List<PhotoLocationUIModel>) {
             PhotoLocationMarker(
                 modifier = Modifier.size(dimensionResource(R.dimen.size_thumbnail)),
                 text = "",
-                model = item
+                model = item,
             )
         },
         clusterManager = clusterManager,
@@ -59,8 +62,11 @@ fun PhotoLocationClustering(items: List<PhotoLocationUIModel>) {
             Timber.d("Cluster clicked! $it")
             false
         }
+
         clusterManager.setOnClusterItemClickListener {
-            Timber.d("Cluster item clicked! $it")
+            Timber.d("사진 아이템 클릭 $it")
+            // todo : 당장은 화면 진입 기능으로 쓰이지만 추후 위치 정보를 띄워주는 기능으로 변경
+            onPhotoClick(it)
             false
         }
         clusterManager.setOnClusterItemInfoWindowClickListener {
@@ -69,9 +75,7 @@ fun PhotoLocationClustering(items: List<PhotoLocationUIModel>) {
     }
     SideEffect {
         if (clusterManager?.renderer != renderer) {
-            clusterManager?.renderer = renderer.apply {
-
-            } ?: return@SideEffect
+            clusterManager?.renderer = renderer ?: return@SideEffect
         }
     }
 

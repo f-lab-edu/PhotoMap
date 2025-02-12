@@ -12,6 +12,9 @@ interface PhotoLocationDao {
     @Query("SELECT * FROM photo_location_table")
     suspend fun getAll(): List<PhotoLocationEntity>
 
+    @Query("SELECT * FROM photo_location_table WHERE id = :id")
+    suspend fun getLocation(id: Long) : PhotoLocationEntity
+
     @Query(
         "SELECT * FROM photo_location_table WHERE (latitude BETWEEN :latitude - :range AND :latitude + :range) " +
                 "AND (longitude BETWEEN :longitude - :range AND :longitude + :range)"

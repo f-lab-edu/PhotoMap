@@ -1,4 +1,4 @@
-package ny.photomap
+package ny.photomap.ui.mainmap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import ny.photomap.R
 import ny.photomap.ui.theme.PhotoMapTheme
 
 @Composable

@@ -17,6 +17,8 @@ interface PhotoDataSource {
 
     suspend fun deleteAllPhotoLocation()
 
+    suspend fun getPhotoLocation(id: Long) : PhotoLocationEntity
+
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,

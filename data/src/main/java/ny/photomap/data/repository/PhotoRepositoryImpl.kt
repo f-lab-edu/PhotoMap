@@ -7,7 +7,8 @@ import ny.photomap.data.db.toEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.domain.PhotoRepository
 import ny.photomap.domain.Result
-import ny.photomap.domain.model.PhotoLocationModel
+import ny.photomap.domain.model.PhotoLocationRequestModel
+import ny.photomap.domain.model.PhotoLocationEntityModel
 import ny.photomap.domain.runResultCatching
 import javax.inject.Inject
 
@@ -16,13 +17,13 @@ class PhotoRepositoryImpl @Inject constructor(
     private val timeStamp: TimeStamp,
 ) :
     PhotoRepository {
-    override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationModel>> {
+    override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationRequestModel>> {
         return runResultCatching {
             dataSource.fetchAllPhotoLocation().map(PhotoLocationData::toModel)
         }
     }
 
-    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationModel>> {
+    override suspend fun fetchPhotoLocationAddedAfter(fetchTime: Long): Result<List<PhotoLocationRequestModel>> {
         return runResultCatching {
             dataSource.fetchPhotoLocationAddedAfter(fetchTime = fetchTime)
                 .map(PhotoLocationData::toModel)
@@ -38,14 +39,15 @@ class PhotoRepositoryImpl @Inject constructor(
         dataSource.getLatestUpdateTime()
     }
 
+
     override suspend fun isSyncExpired(days: Int): Result<Boolean> = runResultCatching {
         timeStamp.hasTimePassed(lastUpdateTime = dataSource.getLatestUpdateTime(), day = days)
     }
 
-    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
+    override suspend fun saveAllPhotoLocation(list: List<PhotoLocationRequestModel>): Result<Unit> {
         return runResultCatching {
             dataSource.saveAllPhotoLocation(
-                list.map(PhotoLocationModel::toEntity)
+                list.map(PhotoLocationRequestModel::toEntity)
             )
         }
     }
@@ -54,11 +56,17 @@ class PhotoRepositoryImpl @Inject constructor(
         dataSource.deleteAllPhotoLocation()
     }
 
+    override suspend fun getPhotoLocation(id: Long): Result<PhotoLocationEntityModel> {
+        return runResultCatching {
+            dataSource.getPhotoLocation(id = id).toModel()
+        }
+    }
+
     suspend fun getPhotoLocation(
         latitude: Double,
         longitude: Double,
         range: Double,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return runResultCatching {
             dataSource.getPhotoLocation(
                 latitude = latitude, longitude = longitude,
@@ -73,7 +81,7 @@ class PhotoRepositoryImpl @Inject constructor(
         range: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return runResultCatching {
             dataSource.getPhotoLocation(
                 latitude = latitude, longitude = longitude,
@@ -88,7 +96,7 @@ class PhotoRepositoryImpl @Inject constructor(
         range: Double,
         startTime: Long?,
         endTime: Long?,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return if (startTime != null && endTime != null) {
             getPhotoLocation(
                 latitude = latitude, longitude = longitude,
@@ -107,7 +115,7 @@ class PhotoRepositoryImpl @Inject constructor(
         southLatitude: Double,
         eastLongitude: Double,
         westLongitude: Double,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return runResultCatching {
             dataSource.getPhotoLocation(
                 northLatitude = northLatitude, southLatitude = southLatitude,
@@ -123,7 +131,7 @@ class PhotoRepositoryImpl @Inject constructor(
         westLongitude: Double,
         startTime: Long,
         endTime: Long,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return runResultCatching {
             dataSource.getPhotoLocation(
                 northLatitude = northLatitude, southLatitude = southLatitude,
@@ -140,7 +148,7 @@ class PhotoRepositoryImpl @Inject constructor(
         westLongitude: Double,
         startTime: Long?,
         endTime: Long?,
-    ): Result<List<PhotoLocationModel>> {
+    ): Result<List<PhotoLocationEntityModel>> {
         return if (startTime != null && endTime != null) {
             getPhotoLocation(
                 northLatitude = northLatitude, southLatitude = southLatitude,
@@ -156,13 +164,13 @@ class PhotoRepositoryImpl @Inject constructor(
 
     }
 
-    override suspend fun initializePhotoLocation(list: List<PhotoLocationModel>): Result<Unit> {
+    override suspend fun initializePhotoLocation(list: List<PhotoLocationRequestModel>): Result<Unit> {
         return runResultCatching {
-            dataSource.initializePhotoLocation(list.map(PhotoLocationModel::toEntity))
+            dataSource.initializePhotoLocation(list.map(PhotoLocationRequestModel::toEntity))
         }
     }
 
-    override suspend fun getLatestPhotoLocation(): Result<PhotoLocationModel?> {
+    override suspend fun getLatestPhotoLocation(): Result<PhotoLocationEntityModel?> {
         return runResultCatching {
             dataSource.getLatestPhotoLocation()?.toModel()
         }
