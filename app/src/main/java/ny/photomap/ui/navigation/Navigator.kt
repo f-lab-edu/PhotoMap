@@ -26,8 +26,8 @@ interface Navigator {
 class PhotoMapNavigator(
     override val startDestination: Destination
 ): Navigator {
-    private val _navigationActions = Channel<NavigationAction>(capacity = Int.MAX_VALUE,
-        onBufferOverflow = BufferOverflow.DROP_LATEST,)
+    private val _navigationActions = Channel<NavigationAction>(capacity = 10,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,)
     override val navigationActions = _navigationActions.receiveAsFlow()
 
     override suspend fun navigate(

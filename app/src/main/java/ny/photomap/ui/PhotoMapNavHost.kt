@@ -11,14 +11,13 @@ import ny.photomap.ui.navigation.Destination
 import ny.photomap.ui.navigation.NavigationAction
 import ny.photomap.ui.navigation.Navigator
 import ny.photomap.ui.navigation.ObserveAsEvents
-import ny.photomap.ui.navigation.PhotoMapNavigator
 import ny.photomap.ui.photo.PhotoScreen
 
 @Composable
 fun PhotoMapNavHost(navigator: Navigator) {
     val navController = rememberNavController()
 
-    ObserveAsEvents(flow = (navigator as PhotoMapNavigator).navigationActions) { action ->
+    ObserveAsEvents(flow = navigator.navigationActions) { action ->
         when (action) {
             is NavigationAction.Navigate -> navController.navigate(
                 action.destination

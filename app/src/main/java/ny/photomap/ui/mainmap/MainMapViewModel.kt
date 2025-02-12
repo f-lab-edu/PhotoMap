@@ -120,7 +120,7 @@ class MainMapViewModel @Inject constructor(
     private val photoCache = mutableMapOf<LocationBoundsUIModel, List<PhotoLocationUIModel>>()
 
     // 화면 첫 진입 시 현재 위치로 이동 필요 상태
-    var shouldInitialized: Boolean = true
+    var isInitializationNeeded: Boolean = true
         private set
 
     override fun handleIntent(event: MainMapIntent) {
@@ -133,7 +133,7 @@ class MainMapViewModel @Inject constructor(
         Timber.d("state: $state\nintent: $intent")
         return when (intent) {
             MainMapIntent.CheckSyncTime -> checkSyncStateAndRequestPermission(state).also {
-                shouldInitialized = false
+                isInitializationNeeded = false
             }
 
             MainMapIntent.Sync -> {

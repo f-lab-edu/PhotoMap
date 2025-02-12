@@ -56,9 +56,7 @@ fun PhotoBottomAppBar(
                         modifier = Modifier
                             .background(color = textBackgroundColor, shape = CircleShape)
                             .padding(top = 3.dp, bottom = 3.dp, start = 10.dp, end = 10.dp),
-                        text = String.format(
-                            location
-                        ),
+                        text = location,
                         color = Color.White, style = Typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )

@@ -93,13 +93,12 @@ fun MainPhotoMapScreen(
         val fusedLocationClient =
             remember { LocationServices.getFusedLocationProviderClient(context) }
 
-        LaunchedEffect(Unit) {
-            if (viewModel.shouldInitialized) {
-                viewModel.handleIntent(MainMapIntent.CheckSyncTime)
-            }
-        }
 
         LaunchedEffect(Unit) {
+            if (viewModel.isInitializationNeeded) {
+                viewModel.handleIntent(MainMapIntent.CheckSyncTime)
+            }
+
             withContext(Dispatchers.Default) {
                 viewModel.effect.collectLatest { effect ->
                     Timber.d("effect: $effect")
@@ -199,8 +198,7 @@ fun MainPhotoMapScreen(
         ) {
             Box {
                 GoogleMap(
-                    modifier = modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     properties = MapProperties(isMyLocationEnabled = false),
                     onMapClick = { lnglat ->
