@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
@@ -20,27 +21,25 @@ import org.junit.rules.TemporaryFolder
 import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class PhotoLocationReferencesTest : CoroutineScope {
+class PhotoLocationReferencesTest {
 
     private lateinit var testDataStore: DataStore<Preferences>
     private lateinit var photoLocationReferences: PhotoLocationReferences
     private lateinit var testDispatcher: TestDispatcher
+    private lateinit var testScope: TestScope
 
     @get:Rule
     val temporaryFolder = TemporaryFolder.builder().assureDeletion().build()
-
-    override val coroutineContext: CoroutineContext
-        get() = testDispatcher + Job()
 
     @Before
     fun setUp() {
         println("setUp")
         testDispatcher = UnconfinedTestDispatcher()
-
+        testScope = TestScope(testDispatcher + Job())
 
         testDataStore =
             PreferenceDataStoreFactory.create(
-                scope = this,
+                scope = testScope,
                 produceFile = { temporaryFolder.newFile("photo_location.preferences_pb") }
             )
 
