@@ -106,7 +106,7 @@ interface PhotoLocationDao {
         insertAll(entityList)
     }
 
-    @Query("SELECT * FROM photo_location_table ORDER BY generatedTime, addedTime DESC LIMIT 1")
+    @Query("SELECT * FROM photo_location_table ORDER BY generatedTime DESC, addedTime DESC LIMIT 1")
     suspend fun getLatest() : PhotoLocationEntity?
 
 }

@@ -14,8 +14,19 @@ kotlin {
     }
 }
 
+testing {
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useJUnitJupiter()
+        }
+    }
+}
+
 dependencies {
     implementation(libs.javax.inject)
     implementation(libs.kotlinx.coroutine.core)
     implementation(kotlin("stdlib"))
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
