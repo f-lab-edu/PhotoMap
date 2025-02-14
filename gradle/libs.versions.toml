@@ -32,9 +32,11 @@ navigationCompose = "2.8.5"
 hiltNavigationCompose = "1.2.0"
 playServicesLocation = "21.3.0"
 timber = "5.0.1"
+junitJupiter = "5.11.4"
 kotlinSerialization = "1.8.0"
 palette = "1.0.0"
 #googleMapsServices = "2.2.0"
+
 
 
 [libraries]
@@ -90,6 +92,7 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
 palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
 #google-maps-services = { group = "com.google.maps", name="google-maps-services", name = "googleMapsServices"}
+junit-jupiter = { group="org.junit.jupiter", name="junit-jupiter", version.ref="junitJupiter"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

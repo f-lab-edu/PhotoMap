@@ -11,7 +11,7 @@ import ny.photomap.data.preferences.PhotoLocationPreferencesImpl
 import ny.photomap.data.preferences.PhotoLocationReferences
 import ny.photomap.data.repository.PhotoRepositoryImpl
 import ny.photomap.domain.PhotoRepository
-import ny.photomap.domain.TimeStamp
+import ny.photomap.data.TimeStamp
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)

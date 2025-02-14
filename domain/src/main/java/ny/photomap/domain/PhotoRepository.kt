@@ -13,6 +13,8 @@ interface PhotoRepository {
 
     suspend fun getLatestUpdateTime(): Result<Long>
 
+    suspend fun isSyncExpired(days: Int) : Result<Boolean>
+
     suspend fun saveAllPhotoLocation(list: List<PhotoLocationRequestModel>) : Result<Unit>
 
     suspend fun deleteAllPhotoLocation() : Result<Unit>

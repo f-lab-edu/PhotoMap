@@ -1,5 +1,6 @@
 package ny.photomap.data.repository
 
+import ny.photomap.data.TimeStamp
 import ny.photomap.data.datasource.PhotoDataSource
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.db.toEntity
@@ -11,7 +12,10 @@ import ny.photomap.domain.model.PhotoLocationEntityModel
 import ny.photomap.domain.runResultCatching
 import javax.inject.Inject
 
-class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataSource) :
+class PhotoRepositoryImpl @Inject constructor(
+    private val dataSource: PhotoDataSource,
+    private val timeStamp: TimeStamp,
+) :
     PhotoRepository {
     override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationRequestModel>> {
         return runResultCatching {
@@ -27,12 +31,17 @@ class PhotoRepositoryImpl @Inject constructor(private val dataSource: PhotoDataS
     }
 
     override suspend fun saveLatestUpdateTime(): Result<Unit> = runResultCatching {
-        dataSource.saveLatestUpdateTime()
+        dataSource.saveLatestUpdateTime(timeStamp.currentTime)
     }
 
 
     override suspend fun getLatestUpdateTime(): Result<Long> = runResultCatching {
         dataSource.getLatestUpdateTime()
+    }
+
+
+    override suspend fun isSyncExpired(days: Int): Result<Boolean> = runResultCatching {
+        timeStamp.hasTimePassed(lastUpdateTime = dataSource.getLatestUpdateTime(), day = days)
     }
 
     override suspend fun saveAllPhotoLocation(list: List<PhotoLocationRequestModel>): Result<Unit> {
