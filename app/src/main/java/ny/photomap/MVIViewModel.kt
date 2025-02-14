@@ -4,11 +4,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
-interface MVIIntent
-interface MVIState
-interface MVIEffect
-
-interface MVIViewModel<Intent : MVIIntent, State : MVIState, out Effect: MVIEffect> {
+interface MVIViewModel<Intent, State, out Effect> {
 
     val effect: SharedFlow<Effect>
 

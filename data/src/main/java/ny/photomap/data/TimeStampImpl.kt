@@ -11,7 +11,7 @@ class TimeStampImpl @Inject constructor() : TimeStamp {
 
     override fun hasTimePassed(lastUpdateTime: Long, day: Int): Boolean {
         val targetDay = lastUpdateTime + day.days.inWholeMilliseconds
-        Timber.d("lastUpdateTime: $lastUpdateTime, day : $day, targetDay : $targetDay, result : ${currentTime >= targetDay}")
+        Timber.d("lastUpdateTime: $lastUpdateTime, day : $day, targetDay : $targetDay")
         return currentTime >= targetDay
     }
 }
