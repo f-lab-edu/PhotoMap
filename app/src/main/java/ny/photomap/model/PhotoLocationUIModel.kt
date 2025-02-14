@@ -16,10 +16,11 @@ data class PhotoLocationUIModel(
 
     override fun getTitle(): String? = name
 
-    override fun getSnippet(): String? =
-        time.takenTimeFormatString() ?: time.addedTimeFormatString()
+    override fun getSnippet(): String? = getDateText()
 
     override fun getZIndex(): Float? = 0f
+
+    fun getDateText() : String? = time.takenTimeFormatString() ?: time.addedTimeFormatString()
 }
 
 fun PhotoLocationEntityModel.toPhotoLocationUiModel(): PhotoLocationUIModel = PhotoLocationUIModel(

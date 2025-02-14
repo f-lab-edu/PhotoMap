@@ -34,12 +34,14 @@ playServicesLocation = "21.3.0"
 timber = "5.0.1"
 junitJupiter = "5.11.4"
 kotlinSerialization = "1.8.0"
+palette = "1.0.0"
+#googleMapsServices = "2.2.0"
 
 
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-coil-compose = { group = "io.coil-kt.coil3", name= "coil-compose", version.ref = "coilCompose" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coilCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -87,7 +89,9 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
-kotlinx-coroutines-play-services = { group="org.jetbrains.kotlinx", name="kotlinx-coroutines-play-services", version.ref="kotlinxCoroutines" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutines" }
+palette = { group = "androidx.palette", name = "palette", version.ref = "palette" }
+#google-maps-services = { group = "com.google.maps", name="google-maps-services", name = "googleMapsServices"}
 junit-jupiter = { group="org.junit.jupiter", name="junit-jupiter", version.ref="junitJupiter"}
 
 [plugins]

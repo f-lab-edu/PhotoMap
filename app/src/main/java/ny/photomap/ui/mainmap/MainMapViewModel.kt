@@ -16,6 +16,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ny.photomap.BaseViewModel
+import ny.photomap.MVIEffect
+import ny.photomap.MVIIntent
+import ny.photomap.MVIState
 import ny.photomap.R
 import ny.photomap.domain.model.PhotoLocationEntityModel
 import ny.photomap.domain.onResponse
@@ -26,11 +29,13 @@ import ny.photomap.model.LocationBoundsUIModel
 import ny.photomap.model.LocationUIModel
 import ny.photomap.model.PhotoLocationUIModel
 import ny.photomap.model.toPhotoLocationUiModel
+import ny.photomap.ui.navigation.Destination
+import ny.photomap.ui.navigation.Navigator
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.collections.List
 
-sealed interface MainMapIntent {
+sealed interface MainMapIntent : MVIIntent {
 
     // 싱크 타이밍 확인
     object CheckSyncTime : MainMapIntent
@@ -75,9 +80,9 @@ data class MainMapState(
     val loading: Boolean = false,
     val showPermissionDialog: Boolean = false,
     val isFirstAppUsage: Boolean = false,
-)
+) : MVIState
 
-sealed interface MainMapEffect {
+sealed interface MainMapEffect : MVIEffect{
     object RequestLocationPermissions : MainMapEffect
 
     object NavigateToAppSetting : MainMapEffect
@@ -93,6 +98,7 @@ class MainMapViewModel @Inject constructor(
     private val checkSyncState: CheckSyncStateUseCase,
     private val syncPhoto: SyncPhotoUseCase,
     private val getPhotoLocationsInBoundaryUseCase: GetPhotoLocationsInBoundaryUseCase,
+    private val navigator: Navigator,
 ) : BaseViewModel<MainMapIntent, MainMapState, MainMapEffect>() {
 
     private val _effect = MutableSharedFlow<MainMapEffect>()
@@ -113,6 +119,9 @@ class MainMapViewModel @Inject constructor(
     private var previousBounds: LocationBoundsUIModel? = null
     private val photoCache = mutableMapOf<LocationBoundsUIModel, List<PhotoLocationUIModel>>()
 
+    // 화면 첫 진입 시 현재 위치로 이동 필요 상태
+    var isInitializationNeeded: Boolean = true
+        private set
 
     override fun handleIntent(event: MainMapIntent) {
         viewModelScope.launch(Dispatchers.Default) {
@@ -123,7 +132,9 @@ class MainMapViewModel @Inject constructor(
     override suspend fun reducer(state: MainMapState, intent: MainMapIntent): MainMapState {
         Timber.d("state: $state\nintent: $intent")
         return when (intent) {
-            MainMapIntent.CheckSyncTime -> checkSyncStateAndRequestPermission(state)
+            MainMapIntent.CheckSyncTime -> checkSyncStateAndRequestPermission(state).also {
+                isInitializationNeeded = false
+            }
 
             MainMapIntent.Sync -> {
                 // todo 작업 중 노티피케이션
@@ -137,7 +148,9 @@ class MainMapViewModel @Inject constructor(
                 cameraLocation = intent.targetPhoto.location,
                 targetPhoto = intent.targetPhoto,
                 loading = false,
-            )
+            ).apply {
+                _effect.emit(MainMapEffect.NavigateToPhoto(intent.targetPhoto))
+            }
 
             is MainMapIntent.SelectLocation -> state.apply {
                 _effect.emit(MainMapEffect.NavigateToDetailLocationMap(intent.targetPhoto))
@@ -182,7 +195,9 @@ class MainMapViewModel @Inject constructor(
                     _effect.emit(
                         MainMapEffect.RequestLocationPermissions
                     )
-                    state
+                    state.copy(
+                        loading = false
+                    )
                 }
             }, ifFailure = {
                 Timber.d("싱크 없이 진행")
@@ -250,6 +265,12 @@ class MainMapViewModel @Inject constructor(
             _photoList.value = list
             photoCache[locationBounds] = list
             previousBounds = locationBounds
+        }
+    }
+
+    fun onPhotoClick(photoId: Long) {
+        viewModelScope.launch {
+            navigator.navigate(Destination.Photo(photoId))
         }
     }
 
