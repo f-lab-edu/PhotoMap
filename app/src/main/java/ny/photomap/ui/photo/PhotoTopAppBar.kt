@@ -40,13 +40,13 @@ fun PhotoTopAppBar(
         navigationIcon = {
             Icon(
                 modifier = Modifier
+                    .padding(start = 5.dp)
+                    .background(color = iconBackgroundColor, shape = CircleShape)
+                    .padding(10.dp)
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }
-                    ) { onClickIcon() }
-                    .padding(start = 5.dp)
-                    .background(color = iconBackgroundColor, shape = CircleShape)
-                    .padding(10.dp),
+                    ) { onClickIcon() },
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = context.getString(ny.photomap.R.string.go_back)
             )

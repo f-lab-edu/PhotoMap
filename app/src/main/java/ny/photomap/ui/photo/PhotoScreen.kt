@@ -144,27 +144,21 @@ fun PhotoScreen(
                     .fillMaxSize()
                     .pointerInput(Unit) {
                         detectTransformGestures { _, pan, zoom, _ ->
-                            // Update scale with the zoom
-                            val newScale = scale * zoom
-                            scale = newScale.coerceIn(minScale, maxScale)
-                            // Calculate new offsets based on zoom and pan
-                            val centerX = size.width / 2
-                            val centerY = size.height / 2
-                            val offsetXChange = (centerX - offsetX) * (newScale / scale - 1)
-                            val offsetYChange = (centerY - offsetY) * (newScale / scale - 1)
-                            // Calculate min and max offsets
-                            val maxOffsetX = (size.width / 2) * (scale - 1)
-                            val minOffsetX = -maxOffsetX
-                            val maxOffsetY = (size.height / 2) * (scale - 1)
-                            val minOffsetY = -maxOffsetY
-                            // Update offsets while ensuring they stay within bounds
-                            if (scale * zoom <= maxScale) {
-                                offsetX = (offsetX + pan.x * scale * slowMovement + offsetXChange)
-                                    .coerceIn(minOffsetX, maxOffsetX)
-                                offsetY = (offsetY + pan.y * scale * slowMovement + offsetYChange)
-                                    .coerceIn(minOffsetY, maxOffsetY)
-                            }
-                            // Store initial offset on pan
+
+                            val (newScale, newOffsetX, newOffsetY) = calculateScaleAndOffsets(
+                                scale = scale,
+                                zoom = zoom,
+                                pan = pan,
+                                minScale = minScale,
+                                maxScale = maxScale,
+                                size = size,
+                                offsetX = offsetX,
+                                offsetY = offsetY,
+                                slowMovement = slowMovement
+                            )
+                            scale = newScale
+                            offsetX = newOffsetX
+                            offsetY = newOffsetY
                             if (pan != Offset(0f, 0f) && initialOffset == Offset(0f, 0f)) {
                                 initialOffset = Offset(offsetX, offsetY)
                             }
