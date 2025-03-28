@@ -17,4 +17,5 @@ data class PhotoLocationEntityModel(
     val longitude: Double,
     val generatedTimeMillis: Long,
     val addedTimeMillis: Long,
+    val location: String?
 )

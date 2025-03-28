@@ -23,6 +23,7 @@ import ny.photomap.R
 import ny.photomap.domain.model.PhotoLocationEntityModel
 import ny.photomap.domain.onResponse
 import ny.photomap.domain.usecase.CheckSyncStateUseCase
+import ny.photomap.domain.usecase.GetLocationTextUseCase
 import ny.photomap.domain.usecase.GetPhotoLocationsInBoundaryUseCase
 import ny.photomap.domain.usecase.SyncPhotoUseCase
 import ny.photomap.model.LocationBoundsUIModel
@@ -59,36 +60,32 @@ sealed interface MainMapIntent : MVIIntent {
     data class LookAroundCurrentLocation(val locationBounds: LocationBoundsUIModel) : MainMapIntent
 
     // 사진 마커 선택
-    data class SelectPhotoLocationMarker(
-        val photoList: List<PhotoLocationUIModel>,
-        val targetPhoto: PhotoLocationUIModel,
+    data class SelectClusteringLocationMarker(
+        val photoList: Array<PhotoLocationUIModel>,
+        val clusteringLocation: LocationUIModel,
     ) : MainMapIntent
 
-    // 사진 위치 정보 선택
-    data class SelectLocation(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
-
     // 사진 선택
-    data class SelectPhoto(val targetPhoto: PhotoLocationUIModel) : MainMapIntent
+    data class SelectPhoto(val photoId: Long) : MainMapIntent
 
     // 권한 주겠다
     object GoToAcceptPermission : MainMapIntent
 }
 
 data class MainMapState(
-    val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0),
-    val targetPhoto: PhotoLocationUIModel? = null,
+    val cameraLocation: LocationUIModel = LocationUIModel(100.0, 100.0, null),
+    val targetLocationPhotoList: Array<PhotoLocationUIModel> = emptyArray(),
     val loading: Boolean = false,
     val showPermissionDialog: Boolean = false,
     val isFirstAppUsage: Boolean = false,
 ) : MVIState
 
-sealed interface MainMapEffect : MVIEffect{
+sealed interface MainMapEffect : MVIEffect {
     object RequestLocationPermissions : MainMapEffect
 
     object NavigateToAppSetting : MainMapEffect
     object MoveToCurrentLocation : MainMapEffect
-    data class NavigateToDetailLocationMap(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
-    data class NavigateToPhoto(val targetPhoto: PhotoLocationUIModel) : MainMapEffect
+    data class NavigateToPhoto(val photoId: Long) : MainMapEffect
     data class Notice(@StringRes val message: Int) : MainMapEffect
     data class Error(@StringRes val message: Int) : MainMapEffect
 }
@@ -97,7 +94,8 @@ sealed interface MainMapEffect : MVIEffect{
 class MainMapViewModel @Inject constructor(
     private val checkSyncState: CheckSyncStateUseCase,
     private val syncPhoto: SyncPhotoUseCase,
-    private val getPhotoLocationsInBoundaryUseCase: GetPhotoLocationsInBoundaryUseCase,
+    private val getPhotoLocationsInBoundary: GetPhotoLocationsInBoundaryUseCase,
+    private val getLocationText: GetLocationTextUseCase,
     private val navigator: Navigator,
 ) : BaseViewModel<MainMapIntent, MainMapState, MainMapEffect>() {
 
@@ -144,20 +142,20 @@ class MainMapViewModel @Inject constructor(
 
             MainMapIntent.SyncFinished -> state.copy(loading = false)
 
-            is MainMapIntent.SelectPhotoLocationMarker -> state.copy(
-                cameraLocation = intent.targetPhoto.location,
-                targetPhoto = intent.targetPhoto,
+            is MainMapIntent.SelectClusteringLocationMarker -> state.copy(
+                cameraLocation = if (intent.clusteringLocation.location.isNullOrEmpty()) {
+                    val location = getLocationText.invoke(
+                        latitude = intent.clusteringLocation.latitude,
+                        longitude = intent.clusteringLocation.longitude
+                    )
+                    intent.clusteringLocation.copy(location = location)
+                } else intent.clusteringLocation,
+                targetLocationPhotoList = intent.photoList,
                 loading = false,
-            ).apply {
-                _effect.emit(MainMapEffect.NavigateToPhoto(intent.targetPhoto))
-            }
-
-            is MainMapIntent.SelectLocation -> state.apply {
-                _effect.emit(MainMapEffect.NavigateToDetailLocationMap(intent.targetPhoto))
-            }
+            )
 
             is MainMapIntent.SelectPhoto -> state.apply {
-                _effect.emit(MainMapEffect.NavigateToPhoto(targetPhoto = intent.targetPhoto))
+                _effect.emit(MainMapEffect.NavigateToPhoto(photoId = intent.photoId))
             }
 
             MainMapIntent.ResetViewState -> MainMapState()
@@ -244,7 +242,7 @@ class MainMapViewModel @Inject constructor(
             _photoList.value = photoCache[cacheBounds]!!
             previousBounds = locationBounds
         } else {
-            val list = getPhotoLocationsInBoundaryUseCase(
+            val list = getPhotoLocationsInBoundary(
                 northLatitude = locationBounds.northLatitude,
                 southLatitude = locationBounds.southLatitude,
                 eastLongitude = locationBounds.eastLongitude,
@@ -260,7 +258,6 @@ class MainMapViewModel @Inject constructor(
 
             Timber.d("사진 조회 범위- $locationBounds")
             Timber.d("result size : ${list.size}")
-
 
             _photoList.value = list
             photoCache[locationBounds] = list

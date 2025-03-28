@@ -2,31 +2,41 @@ package ny.photomap.data.datasource
 
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.Context
 import android.database.Cursor
+import android.location.Address
+import android.location.Geocoder
+import android.location.Geocoder.GeocodeListener
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import androidx.core.database.getStringOrNull
 import androidx.core.os.bundleOf
 import androidx.exifinterface.media.ExifInterface
 import androidx.exifinterface.media.ExifInterface.TAG_DATETIME_ORIGINAL
 import androidx.exifinterface.media.ExifInterface.TAG_OFFSET_TIME_ORIGINAL
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import ny.photomap.data.db.PhotoLocationDao
 import ny.photomap.data.db.PhotoLocationEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.data.preferences.PhotoLocationReferences
-import ny.photomap.data.TimeStamp
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
+import kotlin.collections.first
 
 class PhotoDataSourceImpl @Inject constructor(
     private val contentResolver: ContentResolver,
     private val photoLocationDao: PhotoLocationDao,
     private val preferences: PhotoLocationReferences,
+    @ApplicationContext private val context: Context,
 ) : PhotoDataSource {
 
     private val projection = arrayOf(
@@ -235,6 +245,38 @@ class PhotoDataSourceImpl @Inject constructor(
 
     override suspend fun getLatestPhotoLocation(): PhotoLocationEntity? {
         return photoLocationDao.getLatest()
+    }
+
+    override suspend fun getLocationText(latitude: Double, longitude: Double): String = withContext(
+        Dispatchers.IO
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            suspendCancellableCoroutine<String> { continuation ->
+                Geocoder(context, Locale.getDefault())
+                    .getFromLocation(latitude, longitude, 1, object : GeocodeListener {
+                        override fun onGeocode(addresses: List<Address?>) {
+                            val address = addresses.first()?.getAddressLine(0) ?: ""
+                            continuation.resume(address) { cause, _, _ ->
+                                Timber.e(cause)
+                            }
+                        }
+
+                        override fun onError(errorMessage: String?) {
+                            super.onError(errorMessage)
+                            continuation.resume("") { cause, _, _ ->
+                                Timber.e(cause)
+                            }
+                        }
+                    })
+                continuation.invokeOnCancellation {
+                    Timber.e(it)
+                }
+            }
+        } else {
+            val addressList = Geocoder(context, Locale.getDefault())
+                .getFromLocation(latitude, longitude, 1)
+            addressList?.first()?.getAddressLine(0) ?: ""
+        }
     }
 
     // todo 추후 기능 추가

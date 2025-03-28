@@ -3,8 +3,8 @@ package ny.photomap.data.db
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import ny.photomap.data.model.ModelMapper
-import ny.photomap.domain.model.PhotoLocationRequestModel
 import ny.photomap.domain.model.PhotoLocationEntityModel
+import ny.photomap.domain.model.PhotoLocationRequestModel
 
 @Entity(tableName = "photo_location_table")
 data class PhotoLocationEntity(
@@ -14,6 +14,7 @@ data class PhotoLocationEntity(
     val longitude: Double,
     val generatedTime: Long,
     val addedTime: Long,
+    val location: String?,
 ) : ModelMapper<PhotoLocationEntityModel> {
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0
@@ -26,6 +27,7 @@ data class PhotoLocationEntity(
         longitude = longitude,
         generatedTimeMillis = generatedTime,
         addedTimeMillis = addedTime,
+        location = location
     )
 }
 
@@ -36,6 +38,7 @@ fun PhotoLocationEntityModel.toEntity(): PhotoLocationEntity = PhotoLocationEnti
     longitude = longitude,
     generatedTime = generatedTimeMillis,
     addedTime = addedTimeMillis,
+    location = location
 )
 
 fun PhotoLocationRequestModel.toEntity(): PhotoLocationEntity = PhotoLocationEntity(
@@ -45,4 +48,5 @@ fun PhotoLocationRequestModel.toEntity(): PhotoLocationEntity = PhotoLocationEnt
     longitude = longitude,
     generatedTime = generatedTimeMillis,
     addedTime = addedTimeMillis,
+    location = null
 )
