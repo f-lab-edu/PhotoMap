@@ -4,10 +4,19 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -17,9 +26,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.request.crossfade
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.LocationServices
@@ -36,9 +53,11 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import ny.photomap.BuildConfig
 import ny.photomap.model.LocationBoundsUIModel
+import ny.photomap.model.LocationUIModel
 import ny.photomap.permission.locationPermissions
 import ny.photomap.permission.readImagePermissions
 import ny.photomap.ui.marker.PhotoLocationClustering
+import ny.photomap.ui.photo.CircleShapeBackgroundText
 import timber.log.Timber
 
 @OptIn(ExperimentalPermissionsApi::class, MapsComposeExperimentalApi::class)
@@ -100,6 +119,8 @@ fun MainPhotoMapScreen(
             }
 
             withContext(Dispatchers.Default) {
+
+
                 viewModel.effect.collectLatest { effect ->
                     Timber.d("effect: $effect")
                     when (effect) {
@@ -116,12 +137,8 @@ fun MainPhotoMapScreen(
                             )
                         }
 
-                        is MainMapEffect.NavigateToDetailLocationMap -> {
-
-                        }
-
                         is MainMapEffect.NavigateToPhoto -> {
-                            viewModel.onPhotoClick(effect.targetPhoto.id)
+                            viewModel.onPhotoClick(effect.photoId)
                         }
 
                         is MainMapEffect.Notice -> withContext(Dispatchers.Main) {
@@ -157,6 +174,7 @@ fun MainPhotoMapScreen(
                     }
                 }
             }
+
         }
 
         if (state.showPermissionDialog) {
@@ -207,16 +225,28 @@ fun MainPhotoMapScreen(
                     uiSettings = MapUiSettings(
                         rotationGesturesEnabled = false,
                         indoorLevelPickerEnabled = false,
-                        mapToolbarEnabled = false
+                        mapToolbarEnabled = false,
+                        zoomControlsEnabled = false
                     )
                 ) {
                     PhotoLocationClustering(
                         items = photoList,
-                        onPhotoClick = { photo, clusteringList ->
+                        onPhotoItemClick = { photoId ->
                             viewModel.handleIntent(
-                                MainMapIntent.SelectPhotoLocationMarker(
+                                MainMapIntent.SelectPhoto(
+                                    photoId = photoId
+                                )
+                            )
+                        },
+                        onPhotoClusteringClick = { clusteringLocation, clusteringList ->
+                            viewModel.handleIntent(
+                                MainMapIntent.SelectClusteringLocationMarker(
                                     photoList = clusteringList,
-                                    targetPhoto = photo
+                                    clusteringLocation = LocationUIModel(
+                                        latitude = clusteringLocation.latitude,
+                                        longitude = clusteringLocation.longitude,
+                                        location = null
+                                    )
                                 )
                             )
                         }
@@ -246,8 +276,68 @@ fun MainPhotoMapScreen(
                     )
                 }
 
-            }
+                if (state.targetLocationPhotoList.isNotEmpty()) {
+                    Timber.d("photo list size : ${state.targetLocationPhotoList.size}")
+                    Column(modifier = Modifier.align(Alignment.BottomStart)) {
+                        if (state.cameraLocation.location != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        bottom = dimensionResource(ny.photomap.R.dimen.margin_medium),
+                                        start = dimensionResource(ny.photomap.R.dimen.margin_small),
+                                        end = dimensionResource(ny.photomap.R.dimen.margin_small),
+                                    )
+                            ) {
+                                Spacer(modifier = Modifier.weight(0.01f))
+                                CircleShapeBackgroundText(
+//                                    modifier = Modifier.weight(1f),
+                                    backgroundColor = Color.White,
+                                    text = state.cameraLocation.location ?: "",
+                                    textColor = Color.Black
+                                )
+                                Spacer(modifier = Modifier.weight(0.01f))
+                            }
 
+                        }
+
+                        val lazyListStat = rememberLazyListState()
+                        LazyRow(
+                            modifier = Modifier
+                                .height(dimensionResource(ny.photomap.R.dimen.size_thumbnail)),
+                            state = lazyListStat
+                        ) {
+                            items(state.targetLocationPhotoList.size) { index ->
+                                val photo = state.targetLocationPhotoList[index]
+                                AsyncImage(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(BorderStroke(1.dp, Color.White))
+                                        .clickable {
+                                            viewModel.handleIntent(
+                                                MainMapIntent.SelectPhoto(
+                                                    photoId = photo.id
+                                                )
+                                            )
+                                        },
+
+                                    model = ImageRequest.Builder(context)
+                                        .data(photo.uri) // todo thumbnail로 교체
+                                        .size(
+                                            context.resources.getDimensionPixelSize(ny.photomap.R.dimen.size_thumbnail),
+                                            context.resources.getDimensionPixelSize(ny.photomap.R.dimen.size_thumbnail)
+                                        )
+                                        .crossfade(true)
+                                        .allowHardware(false)
+                                        .build(),
+                                    contentScale = ContentScale.Crop,
+                                    contentDescription = null
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         if (state.loading) {

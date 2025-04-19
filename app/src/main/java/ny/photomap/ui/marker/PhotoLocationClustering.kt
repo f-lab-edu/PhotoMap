@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.clustering.algo.NonHierarchicalViewBasedAlgorithm
 import com.google.maps.android.compose.GoogleMapComposable
 import com.google.maps.android.compose.MapsComposeExperimentalApi
@@ -22,7 +23,8 @@ import timber.log.Timber
 @Composable
 fun PhotoLocationClustering(
     items: List<PhotoLocationUIModel>,
-    onPhotoClick: (item: PhotoLocationUIModel, clusteringList: List<PhotoLocationUIModel>) -> Unit,
+    onPhotoItemClick: (itemId: Long) -> Unit,
+    onPhotoClusteringClick: (item: LatLng, clusteringList: Array<PhotoLocationUIModel>) -> Unit,
 ) {
 
     val configuration = LocalConfiguration.current
@@ -60,13 +62,13 @@ fun PhotoLocationClustering(
         clusterManager ?: return@SideEffect
         clusterManager.setOnClusterClickListener {
             Timber.d("Cluster clicked! $it")
+            onPhotoClusteringClick(it.position, it.items.toTypedArray())
             false
         }
 
         clusterManager.setOnClusterItemClickListener {
             Timber.d("사진 아이템 클릭 $it")
-            // todo : 당장은 화면 진입 기능으로 쓰이지만 추후 위치 정보를 띄워주는 기능으로 변경
-            onPhotoClick(it, listOf(it))
+            onPhotoItemClick(it.id)
             false
         }
         clusterManager.setOnClusterItemInfoWindowClickListener {

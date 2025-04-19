@@ -26,7 +26,7 @@ data class PhotoLocationUIModel(
 fun PhotoLocationEntityModel.toPhotoLocationUiModel(): PhotoLocationUIModel = PhotoLocationUIModel(
     id = id,
     name = name,
-    location = LocationUIModel(latitude = latitude, longitude = longitude),
+    location = LocationUIModel(latitude = latitude, longitude = longitude, location = location),
     time = TimeUIModel(takenTime = this.generatedTimeMillis, addedTime = addedTimeMillis),
     uri = Uri.parse(this.uri)
 )

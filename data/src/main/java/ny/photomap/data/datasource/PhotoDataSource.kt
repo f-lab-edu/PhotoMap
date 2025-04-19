@@ -54,6 +54,8 @@ interface PhotoDataSource {
 
     suspend fun getLatestPhotoLocation() : PhotoLocationEntity?
 
+    suspend fun getLocationText(latitude: Double, longitude: Double) : String
+
     // todo 추후 기능 추가
     /*    suspend fun getPhotoLocationWithOffset(
             latitude: Double,

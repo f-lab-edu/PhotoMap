@@ -5,5 +5,9 @@
     <dimen name="margin_medium">15dp</dimen>
     <dimen name="margin_large">30dp</dimen>
 
-    <dimen name="size_thumbnail">40dp</dimen>
+    <dimen name="padding_circle_shape_top">3dp</dimen>
+    <dimen name="padding_circle_shape_bottom">3dp</dimen>
+    <dimen name="padding_circle_shape_start">10dp</dimen>
+    <dimen name="padding_circle_shape_end">10dp</dimen>
+    <dimen name="size_thumbnail">60dp</dimen>
 </resources>

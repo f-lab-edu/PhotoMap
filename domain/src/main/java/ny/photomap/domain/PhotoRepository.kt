@@ -42,6 +42,8 @@ interface PhotoRepository {
 
     suspend fun getLatestPhotoLocation() : Result<PhotoLocationEntityModel?>
 
+    suspend fun getLocationText(latitude: Double, longitude: Double) : String
+
     // todo 추후 작업
     /*suspend fun getPhotoLocationWithOffset(
         latitude: Double,

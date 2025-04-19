@@ -7,16 +7,15 @@ import ny.photomap.data.db.toEntity
 import ny.photomap.data.model.PhotoLocationData
 import ny.photomap.domain.PhotoRepository
 import ny.photomap.domain.Result
-import ny.photomap.domain.model.PhotoLocationRequestModel
 import ny.photomap.domain.model.PhotoLocationEntityModel
+import ny.photomap.domain.model.PhotoLocationRequestModel
 import ny.photomap.domain.runResultCatching
 import javax.inject.Inject
 
 class PhotoRepositoryImpl @Inject constructor(
     private val dataSource: PhotoDataSource,
     private val timeStamp: TimeStamp,
-) :
-    PhotoRepository {
+) : PhotoRepository {
     override suspend fun fetchAllPhotoLocation(): Result<List<PhotoLocationRequestModel>> {
         return runResultCatching {
             dataSource.fetchAllPhotoLocation().map(PhotoLocationData::toModel)
@@ -175,6 +174,12 @@ class PhotoRepositoryImpl @Inject constructor(
             dataSource.getLatestPhotoLocation()?.toModel()
         }
     }
+
+    override suspend fun getLocationText(
+        latitude: Double,
+        longitude: Double,
+    ): String = dataSource.getLocationText(latitude = latitude, longitude = longitude)
+
 
     // todo 추후 작업
     /*override suspend fun getPhotoLocationWithOffset(
