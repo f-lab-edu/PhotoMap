@@ -1,0 +1,31 @@
+<resources>
+    <string name="app_name">PhotoMap</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="permission_read_image_title">이미지 파일 엑세스</string>
+    <string name="permission_read_image_description">서비스를 이용하기 위해서 이미지 파일 엑세스 권한이 필요합니다.</string>
+    <string name="permission_read_image_visual_user_selected_description">선택한 일부 사진에만 엑세스 권한을 부여했습니다. 모든 이미지 파일에 접근할 수 있게 권한을 허용해주세요.</string>
+    <string name="permission_request_button">권한 승인</string>
+    <string name="badge_alert">!</string>
+    <string name="badge_no">X</string>
+    <string name="button_sync">최신 사진으로 업데이트하기</string>
+    <string name="button_request_file_permission_with_user_visual_selected">모든 사진에 대한 권한이 필요해요</string>
+    <string name="button_request_file_permission_with_denied">사진 업데이트를 위해 권한이 필요해요</string>
+    <string name="button_current_location">현재 위치로 이동하기</string>
+    <string name="button_request_location_permission_with_denied">현재 위치를 알기 위해서는 권한이 필요해요</string>
+    <string name="sync_update_complete">최신 사진 업데이트를 성공했습니다.</string>
+    <string name="sync_update_fail">최신 사진 업데이트를 실패했습니다.</string>
+    <string name="load_photo_list_fail">사진 로드에 실패했습니다.</string>
+    <string name="success">성공</string>
+    <string name="failure">실패</string>
+    <string name="notice_move_to_latest_photo_location">가장 최근 사진의 위치로 이동합니다.</string>
+    <string name="notice_deny_location_permission">현재 위치로 이동하는 기능을 이용할 수 없습니다.</string>
+    <string name="button_progress">진행</string>
+    <string name="button_reject">그만두기</string>
+    <string name="dialog_sync_first">원활한 앱 사용을 위해서 사진 정보를 불러와야 합니다. 이 과정에서 권한 요청을 진행하고 있습니다.</string>
+    <string name="dialog_sync_request">사진 정보를 업데이트한 지 7일이 지났습니다. 업데이트를 진행할까요?</string>
+    <string-array name="loading_sync">
+        <item>최신 사진 정보로 업데이트 중입니다.</item>
+        <item>사진의 양에 따라 수 분의 시간이 걸릴 수 있습니다.</item>
+    </string-array>
+    <string name="go_back">뒤로 가기</string>
+</resources>
